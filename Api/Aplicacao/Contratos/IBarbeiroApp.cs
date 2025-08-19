@@ -1,10 +1,11 @@
-﻿using Api.Models.Entity;
+﻿using Api.Modelos.Dtos;
+using Api.Models.Entity;
 
 namespace Api.Aplicacao.Contratos
 {
     public interface IBarbeiroApp
     {
-        void Cadastrar(Barbeiro barbeiro);
+        void Cadastrar(BarbeiroDto barbeiro);
         void Editar(Barbeiro barbeiro);
         void Excluir(int id);
     }

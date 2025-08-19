@@ -1,4 +1,5 @@
 ﻿using Api.Aplicacao.Contratos;
+using Api.Modelos.Dtos;
 using Api.Models.Entity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,7 +9,7 @@ namespace Api.Controllers
     [Route("api/[controller]")]
     public class BarbeiroController : ControllerBase
     {
-        private readonly IBarbeiroApp _app;
+        public readonly IBarbeiroApp _app;
 
         public BarbeiroController(IBarbeiroApp app)
         {
@@ -16,7 +17,7 @@ namespace Api.Controllers
         }
 
         [HttpPost("Barbeiro")]
-        public IActionResult CriarBarbeiro([FromBody]Barbeiro barbeiro)
+        public IActionResult CriarBarbeiro([FromBody] BarbeiroDto barbeiro)
         {
             _app.Cadastrar(barbeiro);
             return Ok();

@@ -2,12 +2,11 @@
 
 namespace Api.Modelos.Entidades
 {
-    public class Servico
+    public class BarbeiroHorario
     {
         public int Id { get; set; }
-        public Servicos Descricao { get; set; }
-        public decimal Valor { get; set; }
-        public TimeOnly TempoEstimado { get; set; }
+        public TimeOnly Hora { get; set; }
+        public DiaSemana DiaSemana { get; set; }
         public DateTime DtInicio { get; set; }
         public DateTime DtFim { get; set; }
     }

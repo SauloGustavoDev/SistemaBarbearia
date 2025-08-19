@@ -1,23 +1,33 @@
 ﻿using Api.Aplicacao.Contratos;
+using Api.Infraestrutura.Contexto;
+using Api.Modelos.Dtos;
 using Api.Models.Entity;
 
 namespace Api.Aplicacao.Servicos
 {
     public class BarbeiroApp : IBarbeiroApp
     {
-        public void Cadastrar(Barbeiro barbeiro)
+        public readonly Contexto _contexto;
+        public BarbeiroApp(Contexto contexto)
         {
-            throw new NotImplementedException();
+            _contexto = contexto;
+        }
+        public void Cadastrar(BarbeiroDto barbeiro)
+        {
+            _contexto.Add(new Barbeiro(barbeiro));
+            _contexto.SaveChanges();
         }
 
         public void Editar(Barbeiro barbeiro)
         {
-            throw new NotImplementedException();
+            _contexto.Update(barbeiro);
+            _contexto.SaveChanges();
         }
 
         public void Excluir(int id)
         {
-            throw new NotImplementedException();
+            _contexto.Remove(new Barbeiro {Id = id });
+            _contexto.SaveChanges();
         }
     }
 }

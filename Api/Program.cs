@@ -1,19 +1,22 @@
 using Api.Aplicacao.Contratos;
 using Api.Aplicacao.Servicos;
-using Api.Infraestrutura;
+using Api.Infraestrutura.Contexto;
+using Microsoft.EntityFrameworkCore;
 using SuaEmpresa.SuaApp.Infraestrutura.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddDbContext<Contexto>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("PostgresDb")
+    )
+);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var app = builder.Build();
-app.UseMiddleware<ExceptionHandlingMiddleware>();
-builder.Services.AddSingleton<Contexto>();
 builder.Services.AddScoped<IBarbeiroApp, BarbeiroApp>();
 builder.Services.AddScoped<IAgendamentoApp, AgendamentoApp>();
 
@@ -29,6 +32,8 @@ builder.Services.AddCors(options =>
     });
 });
 
+var app = builder.Build();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseCors("MinhaPoliticaCors");
 
 

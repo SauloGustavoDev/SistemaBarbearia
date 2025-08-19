@@ -8,8 +8,8 @@ namespace SuaEmpresa.SuaApp.Infraestrutura.Middlewares
 {
     public class ExceptionHandlingMiddleware
     {
-        private readonly RequestDelegate _next;
-        private readonly ILogger<ExceptionHandlingMiddleware> _logger;
+        public readonly RequestDelegate _next;
+        public readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
         public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
         {

@@ -2,9 +2,9 @@
 {
     public class Horario
     {
-        private int Id { get; set; }
-        private TimeOnly Hora { get; set; }
-        private DateTime DataInicio { get; set; }
-        private DateTime DataFim { get; set; }
+        public int Id { get; set; }
+        public TimeOnly Hora { get; set; }
+        public DateTime DataInicio { get; set; }
+        public DateTime DataFim { get; set; }
     }
 }
