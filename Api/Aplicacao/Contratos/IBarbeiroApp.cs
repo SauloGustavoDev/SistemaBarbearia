@@ -5,7 +5,7 @@ namespace Api.Aplicacao.Contratos
 {
     public interface IBarbeiroApp
     {
-        void Cadastrar(BarbeiroDto barbeiro);
+        void Cadastrar(BarbeiroCriarRequest barbeiro);
         void Editar(Barbeiro barbeiro);
         void Excluir(int id);
     }

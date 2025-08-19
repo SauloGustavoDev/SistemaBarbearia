@@ -28,6 +28,7 @@ namespace Api.Infraestrutura.Contexto
                 entity.Property(e => e.Id).HasColumnName("id");
                 entity.Property(e => e.Senha).HasColumnName("senha");
                 entity.Property(e => e.Nome).HasColumnName("nome");
+                entity.Property(e => e.Email).HasColumnName("email");
                 entity.Property(e => e.Numero).HasColumnName("numero");
                 entity.Property(e => e.Foto).HasColumnName("foto");
                 entity.Property(e => e.Acesso).HasColumnName("acesso").HasConversion<int>();

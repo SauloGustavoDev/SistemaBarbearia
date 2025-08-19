@@ -12,7 +12,7 @@ namespace Api.Aplicacao.Servicos
         {
             _contexto = contexto;
         }
-        public void Cadastrar(BarbeiroDto barbeiro)
+        public void Cadastrar(BarbeiroCriarRequest barbeiro)
         {
             _contexto.Add(new Barbeiro(barbeiro));
             _contexto.SaveChanges();

@@ -9,26 +9,29 @@ namespace Api.Models.Entity
         public int Id { get; set; }
         public string Nome { get; set; }
         public string Numero { get; set; }
-        public byte[] Foto { get; set; }
+        public string Email { get; set; }
+        public byte[]? Foto { get; set; }
         public Acesso Acesso { get; set; }
         public string Senha { get; set; }
-        public string Descricao { get; set; }
+        public string? Descricao { get; set; }
         public DateTime DtCadastro { get; set; }
-        public DateTime DtDemissao { get; set; }
-        public List<Servico> Servicos { get; set; }
-        public List<BarbeiroHorario> BarbeiroHorario{ get; set; }
-        public List<Agendamento> Agendamentos { get; set; }
+        public DateTime? DtDemissao { get; set; }
+        public List<Servico>? Servicos { get; set; }
+        public List<BarbeiroHorario>? BarbeiroHorario{ get; set; }
+        public List<Agendamento>? Agendamentos { get; set; }
         public Barbeiro()
         {
             
         }
-        public Barbeiro(BarbeiroDto barbeiroDto)
+        public Barbeiro(BarbeiroCriarRequest barbeiroDto)
         {
             Nome = barbeiroDto.Nome;
             Numero = barbeiroDto.Numero;
             Acesso = barbeiroDto.Acesso;
             Descricao = barbeiroDto.Descricao;
             Senha = barbeiroDto.Senha;
+            Email = barbeiroDto.Email;
+            DtCadastro = DateTime.Now;
         }
     }
 }

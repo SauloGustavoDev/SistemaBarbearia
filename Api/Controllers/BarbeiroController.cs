@@ -1,6 +1,7 @@
 ﻿using Api.Aplicacao.Contratos;
 using Api.Modelos.Dtos;
 using Api.Models.Entity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
@@ -17,7 +18,8 @@ namespace Api.Controllers
         }
 
         [HttpPost("Barbeiro")]
-        public IActionResult CriarBarbeiro([FromBody] BarbeiroDto barbeiro)
+        [Authorize]
+        public IActionResult CriarBarbeiro([FromBody] BarbeiroCriarRequest barbeiro)
         {
             _app.Cadastrar(barbeiro);
             return Ok();
