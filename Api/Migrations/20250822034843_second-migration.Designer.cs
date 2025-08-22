@@ -35,7 +35,7 @@ namespace Api.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("DtAgendamento")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("timestamp without time zone")
                         .HasColumnName("dtagendamento");
 
                     b.Property<int>("IdBarbeiro")

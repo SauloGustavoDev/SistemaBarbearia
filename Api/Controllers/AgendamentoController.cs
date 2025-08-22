@@ -24,8 +24,8 @@ namespace Api.Controllers
         [HttpPost("Agendamento")]
         public IActionResult GerarAgendamento(AgendamentoCriarRequest request)
         {
-            _app.CriarAgendamento(request);
-            return Ok();
+            var data = _app.CriarAgendamento(request);
+            return Ok(data);
         }
     }
 }

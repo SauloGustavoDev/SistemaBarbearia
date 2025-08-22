@@ -3,6 +3,7 @@
     public enum Servicos
     {
         Cabelo = 1,
-        Barba = 2
+        Barba = 2,
+        Sombrancelha = 3
     }
 }

@@ -33,7 +33,7 @@ namespace Api.Modelos.Entidades
             IdBarbeiro = request.IdBarbeiro;
             NomeCliente = request.Nome;
             NumeroCliente = request.Numero;
-            DtAgendamento = request.DtAgendamento.Date; // Armazena apenas a data, sem a hora
+            DtAgendamento = request.DtAgendamento.ToUniversalTime(); // Armazena apenas a data, sem a hora
             Status = Status.Pendente; // Define um status inicial padrão
 
             // 2. Popula a lista de junção AgendamentoHorarios

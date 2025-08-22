@@ -58,7 +58,7 @@ namespace Api.Migrations
                     status = table.Column<int>(type: "integer", nullable: false),
                     nomecliente = table.Column<string>(type: "text", nullable: false),
                     numerocliente = table.Column<string>(type: "text", nullable: false),
-                    dtagendamento = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    dtagendamento = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
