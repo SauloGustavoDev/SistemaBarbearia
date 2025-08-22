@@ -22,9 +22,16 @@ namespace Api.Controllers
             return Ok(data);
         }
         [HttpPost("Agendamento")]
-        public IActionResult GerarAgendamento(AgendamentoCriarRequest request)
+        public IActionResult GerarAgendamento([FromBody]AgendamentoCriarRequest request)
         {
             var data = _app.CriarAgendamento(request);
+            return Ok(data);
+        }
+
+        [HttpGet("ListarAgendamentos")]
+        public IActionResult ListarAgendamentos([FromQuery]DateTime? dataAgendamento)
+        {
+            var data = _app.ListarAgendamentos(GetUserId(), dataAgendamento);
             return Ok(data);
         }
     }

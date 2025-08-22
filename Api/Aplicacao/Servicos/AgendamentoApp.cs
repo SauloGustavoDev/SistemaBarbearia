@@ -49,6 +49,37 @@ namespace Api.Aplicacao.Servicos
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado ao criar o agendamento." };
             }
         }
+        public AgendamentoResponse ListarAgendamentos(int idBarbeiro, DateTime? data)
+        {
+            data = data.HasValue ? data: DateTime.Now.Date.ToUniversalTime() ;
+
+            var agendamentos = _contexto.Agendamento
+                        .AsNoTracking()
+                        .Where(x => x.IdBarbeiro == idBarbeiro && x.DtAgendamento.Date.ToUniversalTime() == data.Value.Date.ToUniversalTime())
+                        .Include(x => x.AgendamentoHorarios)
+                        .Include(x => x.AgendamentoServicos)
+                        .ToList();
+
+            var agendamentosResult = new AgendamentoResponse(agendamentos);
+            foreach (var item in agendamentosResult.Agendamentos)
+            {
+                item.Horario = _contexto.AgendamentoHorario
+                    .AsNoTracking()
+                    .Include(x => x.BarbeiroHorario)
+                    .Where(x => x.IdAgendamento == item.Id)
+                    .Select(x => x.BarbeiroHorario.Hora)
+                    .ToList();
+
+                item.Servicos = _contexto.AgendamentoServico
+                    .AsNoTracking()
+                    .Include(x => x.Servico)
+                    .Where(x => x.IdAgendamento == item.Id)
+                    .Select(x => x.Servico)
+                    .ToList();
+            }
+            return agendamentosResult;
+
+        }
 
         public List<BarbeiroHorarioResponse> HorariosBarbeiro(BarbeiroHorarioRequest request)
         {
@@ -96,11 +127,50 @@ namespace Api.Aplicacao.Servicos
                     }
                 }
 
-                var servicos = _contexto.Servico
+                var servicosSelecionados = _contexto.Servico
                                 .AsNoTracking()
                                 .Where(x => request.IdsServico.Contains(x.Id))
-                                .ToList();  
+                                .ToList();
 
+                var duracaoTotalServicos = TimeSpan.Zero;
+
+                foreach (var servico in servicosSelecionados)
+                {
+                    // TimeOnly não pode ser somado diretamente, então convertemos para TimeSpan.
+                    duracaoTotalServicos += servico.TempoEstimado.ToTimeSpan();
+                }
+
+                if(duracaoTotalServicos > TimeSpan.FromMinutes(40)){
+
+                    for (int j = 0; j < horariosDisponiveis.Count -1; j++)
+                    {
+                        if (horariosDisponiveis[j].Hora.ToTimeSpan() == TimeSpan.FromHours(12) && data.DayOfWeek != DayOfWeek.Saturday)
+                        {
+                            if (horariosDisponiveis[j + 1].Hora.ToTimeSpan() != new TimeSpan(13, 20, 0) && duracaoTotalServicos > TimeSpan.FromMinutes(80))
+                            {
+                                horariosDisponiveis.RemoveAt(j);
+                                break;
+                            }
+                        }
+
+                        if (horariosDisponiveis[j].Hora.ToTimeSpan() == new TimeSpan(12, 20, 0) && data.DayOfWeek == DayOfWeek.Saturday)
+                        {
+                            if (horariosDisponiveis[j].Hora.AddMinutes(60) != horariosDisponiveis[j + 1].Hora && duracaoTotalServicos > TimeSpan.FromMinutes(60))
+                            {
+                                horariosDisponiveis.RemoveAt(j);
+                                break;
+                            }
+                        }
+
+                        if (horariosDisponiveis[j].Hora.AddMinutes(40) != horariosDisponiveis[j + 1].Hora && duracaoTotalServicos > TimeSpan.FromMinutes(40))
+                        {
+                            horariosDisponiveis.RemoveAt(j);
+                            break;
+                        }
+
+                       
+                    }
+                }
                 if (horariosDisponiveis.Any())
                 {
                     respostaFinal.Add(new BarbeiroHorarioResponse
@@ -112,16 +182,12 @@ namespace Api.Aplicacao.Servicos
             }
 
             return respostaFinal;
+
         }
 
         private int ValidaUtilOuSabado(DateTime data)
         {
             return (data.DayOfWeek == DayOfWeek.Saturday) ? 2 : 1;
-        }
-
-        private bool ValidaExcecaoHorario(BarbeiroHorario excecao, DateTime data)
-        {
-                return (excecao.BarbeiroHorarioExcecao == null) || (excecao.BarbeiroHorarioExcecao.DtExcecao != data);
         }
 
     }
