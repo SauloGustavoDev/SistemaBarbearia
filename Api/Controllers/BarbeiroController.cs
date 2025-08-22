@@ -8,7 +8,7 @@ namespace Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class BarbeiroController : ControllerBase
+    public class BarbeiroController : GsSystemControllerBase
     {
         public readonly IBarbeiroApp _app;
 
@@ -18,23 +18,37 @@ namespace Api.Controllers
         }
 
         [HttpPost("Barbeiro")]
-        [Authorize]
         public IActionResult CriarBarbeiro([FromBody] BarbeiroCriarRequest barbeiro)
         {
             _app.Cadastrar(barbeiro);
             return Ok();
         }
-        [HttpPatch("Barbeiro")]
+        [HttpPut("Barbeiro")]
         public IActionResult AtualizarBarbeiro(Barbeiro barbeiro)
         {
             _app.Editar(barbeiro);
             return Ok();
         }
+
         [HttpDelete("Barbeiro")]
         public IActionResult ExcluirBarbeiro(int id)
         {
             _app.Excluir(id);
             return Ok();
         }
+
+        [HttpGet("Barbeiro")]
+        public IActionResult GetBarbeiro()
+        {
+            var result = _app.BarbeiroDetalhes(GetUserId());
+            return Ok(result);
+        }
+        [HttpGet("Barbeiros")]
+        public IActionResult GetBarbeiros() 
+        {
+            var result = _app.ListaBarbeiros();
+            return Ok(result);
+        }
+
     }
 }

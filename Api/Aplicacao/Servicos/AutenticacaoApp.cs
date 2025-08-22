@@ -21,7 +21,24 @@ namespace Api.Aplicacao.Servicos
             _token = token;
         }
 
-        public GenericRespose EsqueceuSenha(BarbeiroEsqueceSenhaRequest request)
+        public GenericResponse AtualizarSenha(int id, string novaSenha)
+        {
+            var barbeiro = _contexto.Set<Barbeiro>()
+                            .FirstOrDefault(b => b.Id == id);
+
+            if (barbeiro == null)
+                return new GenericResponse { Sucesso = false, ErrorMessage = "Barbeiro não encontrado" };
+
+            if (barbeiro != null)
+            {
+                barbeiro.Senha = novaSenha; // ⚠️ de preferência a senha deve estar hasheada
+                _contexto.Update(barbeiro);
+                _contexto.SaveChanges();
+            }
+
+            return new GenericResponse { Sucesso = true };
+        }
+        public GenericResponse EsqueceuSenha(BarbeiroEsqueceSenhaRequest request)
         {
             var barbeiro = _contexto.Set<Barbeiro>()
                             .AsNoTracking()
@@ -29,30 +46,30 @@ namespace Api.Aplicacao.Servicos
                             .FirstOrDefault();
 
             if (barbeiro.Email == null)
-                return new GenericRespose { Successo = false, ErrorMessage = "Numero ou email invalido" };
+                return new GenericResponse { Sucesso = false, ErrorMessage = "Numero ou email invalido" };
 
             var token = _token.CreateToken(barbeiro);
 
             _notificacao.SendEmailNewPassword(barbeiro.Email, token);
 
-            return new GenericRespose { Successo = true };
+            return new GenericResponse { Sucesso = true };
         }
 
-        public GenericRespose Login(BarbeiroLoginRequest login)
+        public GenericResponse Login(BarbeiroLoginRequest login)
         {
             var barbeiro = _contexto.Set<Barbeiro>()
                             .AsNoTracking()
                             .FirstOrDefault(x => x.Numero == login.Numero && x.Senha == login.Senha);
 
             if(barbeiro == null)
-                return new GenericRespose{
-                    Successo = false, 
+                return new GenericResponse{
+                    Sucesso = false, 
                     ErrorMessage = "Usuário ou senha incorretos" 
                 };
 
-            return new GenericRespose
+            return new GenericResponse
             {
-                Successo = true,
+                Sucesso = true,
                 Token = _token.CreateToken(barbeiro)
             };
         }

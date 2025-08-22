@@ -1,13 +1,14 @@
 ﻿using Api.Aplicacao.Contratos;
 using Api.Modelos.Dtos;
 using Api.Modelos.Request;
+using Api.Models.Entity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AutenticacaoController : ControllerBase
+    public class AutenticacaoController : GsSystemControllerBase
     {
         public readonly IAutenticacaoApp _app;
 
@@ -20,46 +21,31 @@ namespace Api.Controllers
         {
             var result = _app.Login(login);
 
-            if (!result.Successo)
+            if (!result.Sucesso)
                 return Unauthorized(new { message = result.ErrorMessage });
 
             return Ok(new { result.Token });
 
         }
 
-        [HttpPost("NovaSenha")]
-        public IActionResult NovaSenha([FromBody] BarbeiroLoginRequest login)
-        {
-            var result = _app.Login(login);
-
-            if (!result.Successo)
-                return Unauthorized(new { message = result.ErrorMessage });
-
-            return Ok(new { result.Token });
-
-        }
-        /*[HttpPost("EsqueceuSenha")]
+        [HttpPost("EsqueceuSenha")]
         public IActionResult EsqueceuSenha([FromBody] BarbeiroEsqueceSenhaRequest request)
         {
-            var result = _app.Login(login);
+            var result = _app.EsqueceuSenha(request);
 
-            if (!result.Successo)
+            if (!result.Sucesso)
                 return Unauthorized(new { message = result.ErrorMessage });
 
-            return Ok(new { result.Token });
+            return Ok();
 
         }
-        [HttpPost("Sair")]
-        public IActionResult Sair()
+
+        [HttpPatch("NovaSenha")]
+        public IActionResult EditarSenhaBarbeiro(string novaSenha)
         {
-            var result = _app.Login(login);
-
-            if (!result.Successo)
-                return Unauthorized(new { message = result.ErrorMessage });
-
-            return Ok(new { result.Token });
-
-        }*/
+            _app.AtualizarSenha(GetUserId(),novaSenha);
+            return Ok();
+        }
 
     }
 }

@@ -6,8 +6,11 @@ namespace Api.Modelos.Entidades
     {
         public int Id { get; set; }
         public TimeOnly Hora { get; set; }
-        public DiaSemana DiaSemana { get; set; }
+        public TipoDia TipoDia { get; set; }
         public DateTime DtInicio { get; set; }
-        public DateTime DtFim { get; set; }
+        public DateTime? DtFim { get; set; }
+        // 🟢 Adicionar a propriedade da chave estrangeira
+        public int IdBarbeiro { get; set; }
+        public BarbeiroHorarioExcecao BarbeiroHorarioExcecao { get; set; }
     }
 }

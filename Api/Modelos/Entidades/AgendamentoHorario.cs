@@ -3,7 +3,11 @@
     public class AgendamentoHorario
     {
         public int Id { get; set; }
-        public int HorarioId { get; set; }           // FK para Horario
-        public Horario Horario { get; set; }
+        public int IdAgendamento { get; set; }
+        public int IdBarbeiroHorario { get; set; }
+
+        // Navegações opcionais
+        public Agendamento Agendamento { get; set; }
+        public BarbeiroHorario BarbeiroHorario { get; set; }
     }
 }

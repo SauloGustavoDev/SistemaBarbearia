@@ -14,11 +14,11 @@ namespace Api.Models.Entity
         public Acesso Acesso { get; set; }
         public string Senha { get; set; }
         public string? Descricao { get; set; }
-        public DateTime DtCadastro { get; set; }
+        public DateTimeOffset DtCadastro { get; set; }
         public DateTime? DtDemissao { get; set; }
         public List<Servico>? Servicos { get; set; }
-        public List<BarbeiroHorario>? BarbeiroHorario{ get; set; }
-        public List<Agendamento>? Agendamentos { get; set; }
+        public List<BarbeiroHorario>? BarbeiroHorario{ get; set; } = new List<BarbeiroHorario>();
+        public List<Agendamento>? Agendamento { get; set; } = new List<Agendamento>();
         public Barbeiro()
         {
             
@@ -31,7 +31,65 @@ namespace Api.Models.Entity
             Descricao = barbeiroDto.Descricao;
             Senha = barbeiroDto.Senha;
             Email = barbeiroDto.Email;
-            DtCadastro = DateTime.Now;
+            DtCadastro = DateTimeOffset.Now.ToUniversalTime();
+
+            var horariosSemana = DiasSemanas();
+            var sabado = DiaSabado();
+
+            foreach (var dia in horariosSemana)
+            {
+                BarbeiroHorario.Add(new BarbeiroHorario {Hora = dia, TipoDia = (TipoDia)1, DtInicio = DateTime.UtcNow, DtFim = null  });
+            }
+            foreach (var dia in sabado)
+            {
+                BarbeiroHorario.Add(new BarbeiroHorario { Hora = dia, TipoDia = (TipoDia)2, DtInicio = DateTime.UtcNow, DtFim = null });
+            }
+
+        }
+
+        private List<TimeOnly> DiasSemanas()
+        {
+            return new List<TimeOnly>
+            {
+                new TimeOnly(10, 0),
+                new TimeOnly(10, 40),
+                new TimeOnly(11, 20),
+                new TimeOnly(12, 0),
+                new TimeOnly(13, 20),
+                new TimeOnly(14, 0),
+                new TimeOnly(14, 40),
+                new TimeOnly(15, 20),
+                new TimeOnly(16, 0),
+                new TimeOnly(16, 40),
+                new TimeOnly(17, 20),
+                new TimeOnly(18, 0),
+                new TimeOnly(18, 40),
+                new TimeOnly(19, 20),
+                new TimeOnly(20, 0)
+            };
+        }
+
+        private List<TimeOnly> DiaSabado()
+        {
+            return new List<TimeOnly>
+            {
+                new TimeOnly(9, 0),
+                new TimeOnly(9, 40),
+                new TimeOnly(10, 20),
+                new TimeOnly(11, 0),
+                new TimeOnly(11, 40),
+                new TimeOnly(12, 20),
+                new TimeOnly(13, 20),
+                new TimeOnly(14, 0),
+                new TimeOnly(14, 40),
+                new TimeOnly(15, 20),
+                new TimeOnly(16, 0),
+                new TimeOnly(16, 40),
+                new TimeOnly(17, 20),
+                new TimeOnly(18, 0),
+                new TimeOnly(18, 40),
+                new TimeOnly(19, 0)
+            };
         }
     }
 }

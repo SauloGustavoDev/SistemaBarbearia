@@ -5,7 +5,9 @@ namespace Api.Aplicacao.Contratos
 {
     public interface IAutenticacaoApp
     {
-        GenericRespose Login(BarbeiroLoginRequest login);
-        GenericRespose EsqueceuSenha(BarbeiroEsqueceSenhaRequest request);
+        GenericResponse Login(BarbeiroLoginRequest login);
+        GenericResponse EsqueceuSenha(BarbeiroEsqueceSenhaRequest request);
+        GenericResponse AtualizarSenha(int id, string novaSenha);
     }
+
 }

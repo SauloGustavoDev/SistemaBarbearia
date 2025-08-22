@@ -2,7 +2,10 @@
 {
     public class AgendamentoServico
     {
-        public int Id { get; set; }
-        public List<Servico> Servico { get; set; }
+        public int IdAgendamento { get; set; }
+        public Agendamento Agendamento { get; set; }
+
+        public int IdServico { get; set; }
+        public Servico Servico { get; set; }
     }
 }

@@ -10,5 +10,7 @@ namespace Api.Modelos.Entidades
         public TimeOnly TempoEstimado { get; set; }
         public DateTime DtInicio { get; set; }
         public DateTime DtFim { get; set; }
+        public List<AgendamentoServico> AgendamentoServicos { get; set; }
+
     }
 }

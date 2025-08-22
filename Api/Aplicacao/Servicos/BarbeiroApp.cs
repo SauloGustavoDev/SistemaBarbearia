@@ -1,7 +1,10 @@
 ﻿using Api.Aplicacao.Contratos;
 using Api.Infraestrutura.Contexto;
 using Api.Modelos.Dtos;
+using Api.Modelos.Entidades;
+using Api.Modelos.Response;
 using Api.Models.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Aplicacao.Servicos
 {
@@ -28,6 +31,37 @@ namespace Api.Aplicacao.Servicos
         {
             _contexto.Remove(new Barbeiro {Id = id });
             _contexto.SaveChanges();
+        }
+
+        public BarbeiroDetalhesResponse BarbeiroDetalhes(int id)
+        {
+            var barbeiro = _contexto.Set<Barbeiro>()
+                           .AsNoTracking()
+                           .Include(x => x.Servicos)
+                           .Include(x => x.Agendamento)
+                           .Include(x => x.BarbeiroHorario)
+                           .FirstOrDefault(x => x.Id == id) ?? throw new Exception("Barbeiro não encontrado");
+
+            return new BarbeiroDetalhesResponse(barbeiro);
+        }
+
+        public List<BarbeiroDetalhesResponse> ListaBarbeiros()
+        {
+            var barbeiros = _contexto.Set<Barbeiro>()
+                .AsNoTracking()
+                .Where(x => x.DtDemissao == null)
+                .ToList();
+
+            if (barbeiros.Count == 0)
+                throw new Exception("Nenhnum barbeiro encontrado");
+
+            var data = new List<BarbeiroDetalhesResponse>();
+            foreach (var barbeiro in barbeiros)
+            {
+                data.Add(new BarbeiroDetalhesResponse(barbeiro));
+            }
+
+            return data;
         }
     }
 }

@@ -1,8 +1,8 @@
 ﻿namespace Api.Modelos.Response
 {
-    public class GenericRespose
+    public class GenericResponse
     {
-        public bool Successo { get; set; }
+        public bool Sucesso { get; set; }
         public string Token { get; set; }
         public string ErrorMessage { get; set; }
     }

@@ -14,7 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddDbContext<Contexto>(options =>
     options.UseNpgsql(
-        builder.Configuration.GetConnectionString("PostgresDb")
+        builder.Configuration.GetConnectionString("DefaultConnection")
     )
 );
 
