@@ -3,6 +3,7 @@ using System;
 using Api.Infraestrutura.Contexto;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Api.Migrations
 {
     [DbContext(typeof(Contexto))]
-    partial class ContextoModelSnapshot : ModelSnapshot
+    [Migration("20250824172516_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -303,7 +306,7 @@ namespace Api.Migrations
                         .IsRequired();
 
                     b.HasOne("Api.Modelos.Entidades.Servico", "Servico")
-                        .WithMany()
+                        .WithMany("AgendamentoServicos")
                         .HasForeignKey("IdServico")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -351,6 +354,11 @@ namespace Api.Migrations
                 {
                     b.Navigation("BarbeiroHorarioExcecao")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Api.Modelos.Entidades.Servico", b =>
+                {
+                    b.Navigation("AgendamentoServicos");
                 });
 
             modelBuilder.Entity("Api.Models.Entity.Barbeiro", b =>

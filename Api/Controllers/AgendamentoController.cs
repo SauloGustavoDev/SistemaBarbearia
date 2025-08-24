@@ -29,10 +29,12 @@ namespace Api.Controllers
         }
 
         [HttpGet("ListarAgendamentos")]
-        public IActionResult ListarAgendamentos([FromQuery]DateTime? dataAgendamento)
+        public IActionResult ListarAgendamentos([FromHeader] int idBarbeiro, [FromQuery]DateTime? dtInicio, [FromQuery] DateTime? dtFim)
         {
-            var data = _app.ListarAgendamentos(GetUserId(), dataAgendamento);
+            idBarbeiro = idBarbeiro == 0 ? GetUserId() : idBarbeiro;
+            var data = _app.ListarAgendamentos(idBarbeiro, dtInicio, dtFim);
             return Ok(data);
         }
+
     }
 }

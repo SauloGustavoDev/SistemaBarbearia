@@ -7,6 +7,6 @@ namespace Api.Aplicacao.Contratos
     {
         List<BarbeiroHorarioResponse> HorariosBarbeiro(BarbeiroHorarioRequest request);
         GenericResponse CriarAgendamento(AgendamentoCriarRequest request);
-        AgendamentoResponse ListarAgendamentos(int idBarbeiro, DateTime? data);
+        List<AgendamentoResponse> ListarAgendamentos(int idBarbeiro, DateTime? dtInicio, DateTime? dtFim);
     }
 }

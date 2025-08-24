@@ -49,34 +49,29 @@ namespace Api.Aplicacao.Servicos
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado ao criar o agendamento." };
             }
         }
-        public AgendamentoResponse ListarAgendamentos(int idBarbeiro, DateTime? data)
+        public List<AgendamentoResponse> ListarAgendamentos(int idBarbeiro, DateTime? dtInicio, DateTime? dtFim)
         {
-            data = data.HasValue ? data: DateTime.Now.Date.ToUniversalTime() ;
+            dtInicio = dtInicio.HasValue ? dtInicio: DateTime.Now.Date.ToUniversalTime();
+            dtFim = dtFim.HasValue ? dtFim : DateTime.Now.Date.ToUniversalTime();
+
 
             var agendamentos = _contexto.Agendamento
-                        .AsNoTracking()
-                        .Where(x => x.IdBarbeiro == idBarbeiro && x.DtAgendamento.Date.ToUniversalTime() == data.Value.Date.ToUniversalTime())
-                        .Include(x => x.AgendamentoHorarios)
-                        .Include(x => x.AgendamentoServicos)
-                        .ToList();
+                                  .AsNoTracking()
+                                  .Where(x => x.IdBarbeiro == idBarbeiro &&
+                                              x.DtAgendamento.Date.ToUniversalTime() >= dtInicio.Value.Date.ToUniversalTime() &&
+                                              x.DtAgendamento.Date.ToUniversalTime() <= dtFim.Value.Date.ToUniversalTime())
+                                  .Include(x => x.AgendamentoHorarios)
+                                  .ThenInclude(x => x.BarbeiroHorario)
+                                  .Include(x => x.AgendamentoServicos)
+                                  .ThenInclude(x => x.Servico)
+                                  .OrderByDescending(x => x.DtAgendamento)
+                                  .GroupBy(x => x.DtAgendamento.Date)
+                                  .ToList();
 
-            var agendamentosResult = new AgendamentoResponse(agendamentos);
-            foreach (var item in agendamentosResult.Agendamentos)
-            {
-                item.Horario = _contexto.AgendamentoHorario
-                    .AsNoTracking()
-                    .Include(x => x.BarbeiroHorario)
-                    .Where(x => x.IdAgendamento == item.Id)
-                    .Select(x => x.BarbeiroHorario.Hora)
-                    .ToList();
+            var agendamentosResult = agendamentos
+                .Select(g => new AgendamentoResponse(g.ToList(), g.Key))
+                .ToList();
 
-                item.Servicos = _contexto.AgendamentoServico
-                    .AsNoTracking()
-                    .Include(x => x.Servico)
-                    .Where(x => x.IdAgendamento == item.Id)
-                    .Select(x => x.Servico)
-                    .ToList();
-            }
             return agendamentosResult;
 
         }

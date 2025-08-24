@@ -158,7 +158,7 @@ namespace Api.Infraestrutura.Contexto
 
                 // Relacionamento com Servico
                 entity.HasOne(e => e.Servico)
-                      .WithMany(s => s.AgendamentoServicos)
+                      .WithMany()
                       .HasForeignKey(e => e.IdServico);
             });
 
