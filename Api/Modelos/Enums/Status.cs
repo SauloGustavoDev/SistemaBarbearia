@@ -3,8 +3,10 @@
     public enum Status
     {
         Concluido = 1,
-        Cancelado = 2,
-        Pendente = 3,
-        Atrasado = 4
+        Pendete = 2,
+        CanceladoPeloCliente = 3,
+        CanceladoPeloBarbeiro = 4,
+        VouComparecer = 5,
+        VouAtrasar = 6
     }
 }

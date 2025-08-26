@@ -3,6 +3,7 @@ using System;
 using Api.Infraestrutura.Contexto;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Api.Migrations
 {
     [DbContext(typeof(Contexto))]
-    partial class ContextoModelSnapshot : ModelSnapshot
+    [Migration("20250826214837_adicionadoCAtegoriaServico")]
+    partial class adicionadoCAtegoriaServico
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -39,11 +42,6 @@ namespace Api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("idbarbeiro");
 
-                    b.Property<string>("MetodoPagamento")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("metodopagamento");
-
                     b.Property<string>("NomeCliente")
                         .IsRequired()
                         .HasColumnType("text")
@@ -54,9 +52,8 @@ namespace Api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("numerocliente");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text")
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
                         .HasColumnName("status");
 
                     b.HasKey("Id");
@@ -249,9 +246,8 @@ namespace Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Acesso")
-                        .IsRequired()
-                        .HasColumnType("text")
+                    b.Property<int>("Acesso")
+                        .HasColumnType("integer")
                         .HasColumnName("acesso");
 
                     b.Property<string>("Descricao")

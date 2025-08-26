@@ -17,6 +17,7 @@ namespace Api.Modelos.Entidades
         public string NumeroCliente { get; set; }
         public DateTime DtAgendamento { get; set; }
         public Status Status { get; set; }
+        public MetodoPagamento MetodoPagamento { get; set; }
 
         // Navegações
         public Barbeiro Barbeiro { get; set; }

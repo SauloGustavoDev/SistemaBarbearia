@@ -19,6 +19,9 @@ namespace Api.Infraestrutura.Contexto
         public DbSet<AgendamentoServico> AgendamentoServico { get; set; }
         public DbSet<BarbeiroHorario> BarbeiroHorario { get; set; }
         public DbSet<BarbeiroHorarioExcecao> BarbeiroHorarioExcecao { get; set; }
+        public DbSet<CategoriaServico> CategoriaServico { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // BARBEIRO
@@ -32,7 +35,8 @@ namespace Api.Infraestrutura.Contexto
                 entity.Property(e => e.Email).HasColumnName("email");
                 entity.Property(e => e.Numero).HasColumnName("numero");
                 entity.Property(e => e.Foto).HasColumnName("foto");
-                entity.Property(e => e.Acesso).HasColumnName("acesso").HasConversion<int>();
+                entity.Property(e => e.Acesso).HasColumnName("acesso")
+                .HasConversion<string>();
                 entity.Property(e => e.Descricao).HasColumnName("descricao");
                 entity.Property(e => e.DtCadastro).HasColumnName("dtcadastro");
                 entity.Property(e => e.DtDemissao).HasColumnName("dtdemissao");
@@ -74,7 +78,8 @@ namespace Api.Infraestrutura.Contexto
                 entity.Property(e => e.IdBarbeiro).HasColumnName("idbarbeiro");
 
                 entity.Property(e => e.Hora).HasColumnName("hora").HasColumnType("time");
-                entity.Property(e => e.TipoDia).HasColumnName("tipodia").HasConversion<string>();
+                entity.Property(e => e.TipoDia).HasColumnName("tipodia")
+                .HasConversion<string>();
                 entity.Property(e => e.DtInicio).HasColumnName("dtinicio");
                 entity.Property(e => e.DtFim).HasColumnName("dtfim");
 
@@ -109,8 +114,13 @@ namespace Api.Infraestrutura.Contexto
                 // Mapeamento explícito da propriedade para a coluna
                 entity.Property(e => e.IdBarbeiro).HasColumnName("idbarbeiro");
 
+                entity.Property(e => e.MetodoPagamento)
+                .HasColumnName("metodopagamento") // Define o nome da coluna
+                .HasConversion<string>(); // <<-- A MÁGICA ACONTECE AQUI
+
                 entity.Property(e => e.NumeroCliente).HasColumnName("numerocliente");
-                entity.Property(e => e.Status).HasColumnName("status");
+                entity.Property(e => e.Status).HasColumnName("status")
+                .HasConversion<string>();
                 entity.Property(e => e.NomeCliente).HasColumnName("nomecliente");
                 entity.Property(e => e.DtAgendamento).HasColumnName("dtagendamento");
 

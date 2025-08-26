@@ -161,10 +161,7 @@ namespace Api.Aplicacao.Servicos
                         {
                             horariosDisponiveis.RemoveAt(j);
                             break;
-                        }
-
-                       
-                    }
+                        }                    }
                 }
                 if (horariosDisponiveis.Any())
                 {
@@ -185,5 +182,27 @@ namespace Api.Aplicacao.Servicos
             return (data.DayOfWeek == DayOfWeek.Saturday) ? 2 : 1;
         }
 
+        public GenericResponse CompletarAgendamento(CompletarAgendamentoRequest request)
+        {
+            var agendamento = _contexto.Agendamento
+                   .Include(a => a.AgendamentoServicos)
+                   .FirstOrDefault(a => a.Id == request.IdAgendamento);
+
+            if (agendamento == null)
+                return new GenericResponse { Sucesso = false, ErrorMessage = "Falha ao atualizar agendamento" };
+
+            agendamento.MetodoPagamento = request.MetodoPagamento;
+
+            agendamento.AgendamentoServicos.Clear();
+
+            foreach (var item in request.IdsServico)
+            {
+                agendamento.AgendamentoServicos.Add(new AgendamentoServico { IdAgendamento = request.IdAgendamento, IdServico = item });
+            }
+
+            _contexto.SaveChanges();
+
+            return new GenericResponse { Sucesso = true, ErrorMessage = "Agendamento completado!" };
+        }
     }
 }

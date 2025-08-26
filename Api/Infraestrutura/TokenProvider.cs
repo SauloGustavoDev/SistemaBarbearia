@@ -19,6 +19,7 @@ namespace Api.Infraestrutura
                     [
                     new Claim("Id", barbeiro.Id.ToString()),
                     new Claim("Numero", barbeiro.Numero),
+                    new Claim("Nome", barbeiro.Nome),
                     new Claim("Acesso", barbeiro.Acesso.ToString())
                     ]),
                 Expires = DateTime.UtcNow.AddHours(12),
