@@ -12,12 +12,9 @@ namespace Api.Controllers
         {
             _app = app;
         }
-        [HttpPost("HorariosBarbeiro")]
+        [HttpPost("HorariosBarbeiros")]
         public IActionResult HorariosBarbeiro([FromBody] BarbeiroHorarioRequest request)
         {
-            if (request.IdsServico.Count == 0)
-                return BadRequest("Selecione algum serviço");
-
             var data = _app.HorariosBarbeiro(request);
             return Ok(data);
         }
@@ -29,10 +26,10 @@ namespace Api.Controllers
         }
 
         [HttpGet("ListarAgendamentos")]
-        public IActionResult ListarAgendamentos([FromHeader] int idBarbeiro, [FromQuery] DateTime? dtInicio, [FromQuery] DateTime? dtFim)
+        public IActionResult ListarAgendamentos([FromHeader] int idBarbeiro, [FromHeader]int idServico, [FromQuery] string nomeCliente,  [FromQuery] DateTime? dtInicio, [FromQuery] DateTime? dtFim)
         {
             idBarbeiro = idBarbeiro == 0 ? GetUserId() : idBarbeiro;
-            var data = _app.ListarAgendamentos(idBarbeiro, dtInicio, dtFim);
+            var data = _app.ListarAgendamentos(idBarbeiro,idServico,nomeCliente, dtInicio, dtFim);
             return Ok(data);
         }
 
@@ -40,7 +37,7 @@ namespace Api.Controllers
         public IActionResult CompletarAgendamento(CompletarAgendamentoRequest request)
         {
             var data = _app.CompletarAgendamento(request);
-            return Ok();
+            return Ok(data);
         }
 
     }

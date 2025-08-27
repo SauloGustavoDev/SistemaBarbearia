@@ -49,7 +49,7 @@ namespace Api.Aplicacao.Servicos
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado ao criar o agendamento." };
             }
         }
-        public List<AgendamentoResponse> ListarAgendamentos(int idBarbeiro, DateTime? dtInicio, DateTime? dtFim)
+        public List<AgendamentoResponse> ListarAgendamentos(int idBarbeiro, int idServico, string nomeCliente, DateTime? dtInicio, DateTime? dtFim)
         {
             dtInicio = dtInicio.HasValue ? dtInicio: DateTime.Now.Date.ToUniversalTime();
             dtFim = dtFim.HasValue ? dtFim : DateTime.Now.Date.ToUniversalTime();
@@ -59,7 +59,9 @@ namespace Api.Aplicacao.Servicos
                                   .AsNoTracking()
                                   .Where(x => x.IdBarbeiro == idBarbeiro &&
                                               x.DtAgendamento.Date.ToUniversalTime() >= dtInicio.Value.Date.ToUniversalTime() &&
-                                              x.DtAgendamento.Date.ToUniversalTime() <= dtFim.Value.Date.ToUniversalTime())
+                                              x.DtAgendamento.Date.ToUniversalTime() <= dtFim.Value.Date.ToUniversalTime() &&
+                                              (nomeCliente == null || x.NomeCliente == nomeCliente) &&
+                                              (idServico == 0 || x.AgendamentoServicos.Any(j => j.IdServico == idServico)))
                                   .Include(x => x.AgendamentoHorarios)
                                   .ThenInclude(x => x.BarbeiroHorario)
                                   .Include(x => x.AgendamentoServicos)
@@ -184,6 +186,9 @@ namespace Api.Aplicacao.Servicos
 
         public GenericResponse CompletarAgendamento(CompletarAgendamentoRequest request)
         {
+            if(request.IdsServico.Count == 0)
+                return new GenericResponse { Sucesso = false, ErrorMessage = "É necessário selecionar algum serviço" };
+
             var agendamento = _contexto.Agendamento
                    .Include(a => a.AgendamentoServicos)
                    .FirstOrDefault(a => a.Id == request.IdAgendamento);
