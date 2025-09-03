@@ -26,7 +26,7 @@ namespace Api.Aplicacao.Servicos
                 request.DtAgendamento = request.DtAgendamento.ToUniversalTime();
 
                 var horariosOcupados = _contexto.AgendamentoHorario
-                    .Include(ah => ah.Agendamento) 
+                    .Include(ah => ah.Agendamento)
                     .Where(ah => ah.Agendamento.DtAgendamento.Date == request.DtAgendamento.Date &&
                                  ah.Agendamento.IdBarbeiro == request.IdBarbeiro &&
                                  request.IdsHorario.Contains(ah.IdBarbeiroHorario))
@@ -42,16 +42,16 @@ namespace Api.Aplicacao.Servicos
                 _contexto.Agendamento.Add(novoAgendamento);
                 _contexto.SaveChanges();
 
-                return new GenericResponse { Sucesso = true};
-                }
+                return new GenericResponse { Sucesso = true };
+            }
             catch (Exception ex)
             {
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado ao criar o agendamento." };
             }
         }
-        public List<AgendamentoResponse> ListarAgendamentos(int idBarbeiro, int idServico, string nomeCliente, DateTime? dtInicio, DateTime? dtFim)
+        public List<AgendamentoResponse> ListarAgendamentos(int idBarbeiro, int idServico, string nomeCliente, DateTime? dtInicio, DateTime? dtFim, int status)
         {
-            dtInicio = dtInicio.HasValue ? dtInicio: DateTime.Now.Date.ToUniversalTime();
+            dtInicio = dtInicio.HasValue ? dtInicio : DateTime.Now.Date.ToUniversalTime();
             dtFim = dtFim.HasValue ? dtFim : DateTime.Now.Date.ToUniversalTime();
 
 
@@ -60,7 +60,8 @@ namespace Api.Aplicacao.Servicos
                                   .Where(x => x.IdBarbeiro == idBarbeiro &&
                                               x.DtAgendamento.Date.ToUniversalTime() >= dtInicio.Value.Date.ToUniversalTime() &&
                                               x.DtAgendamento.Date.ToUniversalTime() <= dtFim.Value.Date.ToUniversalTime() &&
-                                              (nomeCliente == null || x.NomeCliente == nomeCliente) &&
+                                              (nomeCliente == null || x.NomeCliente.ToUpper().Contains(nomeCliente.ToUpper())) &&
+                                              (status == 0 || (int)x.Status == status) &&
                                               (idServico == 0 || x.AgendamentoServicos.Any(j => j.IdServico == idServico)))
                                   .Include(x => x.AgendamentoHorarios)
                                   .ThenInclude(x => x.BarbeiroHorario)
@@ -96,7 +97,7 @@ namespace Api.Aplicacao.Servicos
             var horariosOcupados = _contexto.Agendamento
                 .AsNoTracking()
                 .Where(a => a.IdBarbeiro == request.Id && !datasParaConsulta.Contains(a.DtAgendamento.Date.ToUniversalTime()))
-                .SelectMany(a => a.AgendamentoHorarios)   
+                .SelectMany(a => a.AgendamentoHorarios)
                 .Include(x => x.Agendamento)
                 .ToList();
 
@@ -137,9 +138,10 @@ namespace Api.Aplicacao.Servicos
                     duracaoTotalServicos += servico.TempoEstimado.ToTimeSpan();
                 }
 
-                if(duracaoTotalServicos > TimeSpan.FromMinutes(40)){
+                if (duracaoTotalServicos > TimeSpan.FromMinutes(40))
+                {
 
-                    for (int j = 0; j < horariosDisponiveis.Count -1; j++)
+                    for (int j = 0; j < horariosDisponiveis.Count - 1; j++)
                     {
                         if (horariosDisponiveis[j].Hora.ToTimeSpan() == TimeSpan.FromHours(12) && data.DayOfWeek != DayOfWeek.Saturday)
                         {
@@ -163,7 +165,8 @@ namespace Api.Aplicacao.Servicos
                         {
                             horariosDisponiveis.RemoveAt(j);
                             break;
-                        }                    }
+                        }
+                    }
                 }
                 if (horariosDisponiveis.Any())
                 {
@@ -184,30 +187,77 @@ namespace Api.Aplicacao.Servicos
             return (data.DayOfWeek == DayOfWeek.Saturday) ? 2 : 1;
         }
 
-        public GenericResponse CompletarAgendamento(CompletarAgendamentoRequest request)
+        public GenericResponse CompletarAgendamento(AgendamentoCompletarRequest request)
         {
-            if(request.IdsServico.Count == 0)
-                return new GenericResponse { Sucesso = false, ErrorMessage = "É necessário selecionar algum serviço" };
-
             var agendamento = _contexto.Agendamento
-                   .Include(a => a.AgendamentoServicos)
                    .FirstOrDefault(a => a.Id == request.IdAgendamento);
 
             if (agendamento == null)
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Falha ao atualizar agendamento" };
 
             agendamento.MetodoPagamento = request.MetodoPagamento;
-
-            agendamento.AgendamentoServicos.Clear();
-
-            foreach (var item in request.IdsServico)
-            {
-                agendamento.AgendamentoServicos.Add(new AgendamentoServico { IdAgendamento = request.IdAgendamento, IdServico = item });
-            }
+            agendamento.Status = Status.Concluido;
 
             _contexto.SaveChanges();
 
             return new GenericResponse { Sucesso = true, ErrorMessage = "Agendamento completado!" };
+        }
+
+        public GenericResponse CancelarAgendamento(int id)
+        {
+            var agendamento = _contexto.Agendamento
+                   .FirstOrDefault(a => a.Id == id);
+
+            if (agendamento == null)
+                return new GenericResponse { Sucesso = false, ErrorMessage = "Falha ao cancelar agendamento" };
+
+            agendamento.Status = Status.CanceladoPeloBarbeiro;
+
+            _contexto.SaveChanges();
+            return new GenericResponse { Sucesso = true, ErrorMessage = "Agendamento cancelado!" };
+        }
+
+        public GenericResponse AtualizarAgendamento(AgendamentoAtualizarRequest agendamento)
+        {
+            try
+            {
+                var agendamentoExistente = _contexto.Agendamento
+                    .Include(a => a.AgendamentoServicos)
+                    .FirstOrDefault(a => a.Id == agendamento.Id);
+
+                if (agendamentoExistente == null)
+                {
+                    return new GenericResponse { Sucesso = false, ErrorMessage = "Agendamento não encontrado." };
+                }
+
+                agendamentoExistente.MetodoPagamento = agendamento.MetodoPagamento;
+                _contexto.AgendamentoServico.RemoveRange(agendamentoExistente.AgendamentoServicos);
+                agendamentoExistente.AgendamentoServicos = agendamento.IdsServico.Select(x => new AgendamentoServico { IdAgendamento = agendamento.Id, IdServico = x }).ToList();
+                _contexto.SaveChanges();
+                return new GenericResponse { Sucesso = true };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado ao atualizar o agendamento." };
+            }
+        }
+
+        public AgendamentoAtualResponse AgendamentoAtual(int idBarbeiro)
+        {
+            var agendamento = _contexto.Agendamento
+                .AsNoTracking()
+                .Where(a => a.IdBarbeiro == idBarbeiro &&
+                            (a.Status == Status.Pendente || a.Status == Status.Confirmado))
+                .Include(a => a.Barbeiro)
+                .Include(a => a.AgendamentoHorarios)
+                .Include(a => a.AgendamentoServicos)
+                .ThenInclude(a => a.Servico)
+                .OrderBy(a => a.DtAgendamento)
+                .FirstOrDefault();
+            
+            var agendamentoAtual = new AgendamentoAtualResponse(agendamento);
+
+            return agendamentoAtual;
         }
     }
 }

@@ -21,8 +21,8 @@ namespace Api.Modelos.Entidades
 
         // Navegações
         public Barbeiro Barbeiro { get; set; }
-        public List<AgendamentoHorario> AgendamentoHorarios { get; private set; } = new List<AgendamentoHorario>();
-        public List<AgendamentoServico> AgendamentoServicos { get; private set; } = new List<AgendamentoServico>();
+        public List<AgendamentoHorario> AgendamentoHorarios { get; set; } = new List<AgendamentoHorario>();
+        public List<AgendamentoServico> AgendamentoServicos { get; set; } = new List<AgendamentoServico>();
 
         // Construtor para o EF Core
         public Agendamento() { }

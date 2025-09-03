@@ -51,6 +51,8 @@ namespace Api.Infraestrutura.Contexto
                 // 🔴 Adicionar este mapeamento para a PK
                 entity.Property(e => e.Id).HasColumnName("id");
 
+                entity.Property(e => e.IdBarbeiro).HasColumnName("idbarbeiro");
+
                 // Mapear o enum para ser salvo como string ou int no banco
                 entity.Property(e => e.Descricao)
                       .HasColumnName("descricao")
@@ -65,6 +67,10 @@ namespace Api.Infraestrutura.Contexto
 
                 entity.Property(e => e.DtInicio).HasColumnName("dtinicio");
                 entity.Property(e => e.DtFim).HasColumnName("dtfim");
+
+                entity.HasOne<Barbeiro>()
+                .WithMany(b => b.Servicos)
+                .HasForeignKey(a => a.IdBarbeiro); // FK sem propriedade na entidade
             });
 
             // Api.Infraestrutura.Contexto/Contexto.cs

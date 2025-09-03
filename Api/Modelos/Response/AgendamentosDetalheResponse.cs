@@ -9,7 +9,7 @@ namespace Api.Modelos.Response
     public string NomeCliente { get; set; }
     public string NumeroCliente { get; set; }
     public Status Status { get; set; }
-    public List<TimeOnly> Horarios { get; set; }
+    public TimeOnly Horario { get; set; }
     public List<ServicosDetalhesResponse> Servicos { get; set; }
 
     public AgendamentosDetalheResponse(Agendamento request)
@@ -18,8 +18,8 @@ namespace Api.Modelos.Response
         NomeCliente = request.NomeCliente;
         NumeroCliente = request.NumeroCliente;
         Status = request.Status;
-        Horarios = request.AgendamentoHorarios.Select(x => x.BarbeiroHorario.Hora).ToList();
-        Servicos = request.AgendamentoServicos.Select(x => new ServicosDetalhesResponse {Descricao = x.Servico.Descricao, Valor = x.Servico.Valor }).ToList();
+        Horario = request.AgendamentoHorarios.OrderBy(x => x.BarbeiroHorario.Hora).FirstOrDefault().BarbeiroHorario.Hora;
+        Servicos = request.AgendamentoServicos.Select(x => new ServicosDetalhesResponse {Descricao = x.Servico.Descricao}).ToList();
     }
 }
 }

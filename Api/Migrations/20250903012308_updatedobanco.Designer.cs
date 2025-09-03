@@ -3,6 +3,7 @@ using System;
 using Api.Infraestrutura.Contexto;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Api.Migrations
 {
     [DbContext(typeof(Contexto))]
-    partial class ContextoModelSnapshot : ModelSnapshot
+    [Migration("20250903012308_updatedobanco")]
+    partial class updatedobanco
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -201,6 +204,9 @@ namespace Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BarbeiroId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("CategoriaServicoId")
                         .HasColumnType("integer");
 
@@ -218,8 +224,7 @@ namespace Api.Migrations
                         .HasColumnName("dtinicio");
 
                     b.Property<int>("IdBarbeiro")
-                        .HasColumnType("integer")
-                        .HasColumnName("idbarbeiro");
+                        .HasColumnType("integer");
 
                     b.Property<TimeOnly>("TempoEstimado")
                         .HasColumnType("time")
@@ -230,6 +235,8 @@ namespace Api.Migrations
                         .HasColumnName("valor");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BarbeiroId");
 
                     b.HasIndex("CategoriaServicoId");
 
@@ -365,6 +372,12 @@ namespace Api.Migrations
 
             modelBuilder.Entity("Api.Modelos.Entidades.Servico", b =>
                 {
+                    b.HasOne("Api.Models.Entity.Barbeiro", "Barbeiro")
+                        .WithMany()
+                        .HasForeignKey("BarbeiroId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Api.Modelos.Entidades.CategoriaServico", "CategoriaServico")
                         .WithMany()
                         .HasForeignKey("CategoriaServicoId")
@@ -376,6 +389,8 @@ namespace Api.Migrations
                         .HasForeignKey("IdBarbeiro")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Barbeiro");
 
                     b.Navigation("CategoriaServico");
                 });

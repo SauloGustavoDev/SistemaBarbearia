@@ -55,6 +55,7 @@ builder.Services.AddScoped<IBarbeiroApp, BarbeiroApp>();
 builder.Services.AddScoped<IAgendamentoApp, AgendamentoApp>();
 builder.Services.AddScoped<IAutenticacaoApp, AutenticacaoApp>();
 builder.Services.AddScoped<INotificacaoApp, NotificacaoApp>();
+builder.Services.AddScoped<IServicoApp, ServicoApp>();
 builder.Services.AddSingleton<TokenProvider>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
