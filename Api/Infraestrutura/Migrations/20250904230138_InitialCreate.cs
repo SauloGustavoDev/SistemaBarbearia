@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Api.Migrations
 {
     /// <inheritdoc />
-    public partial class firstmigration : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -22,7 +22,7 @@ namespace Api.Migrations
                     numero = table.Column<string>(type: "text", nullable: false),
                     email = table.Column<string>(type: "text", nullable: false),
                     foto = table.Column<byte[]>(type: "bytea", nullable: true),
-                    acesso = table.Column<int>(type: "integer", nullable: false),
+                    acesso = table.Column<string>(type: "text", nullable: false),
                     senha = table.Column<string>(type: "text", nullable: false),
                     descricao = table.Column<string>(type: "text", nullable: true),
                     dtcadastro = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -34,18 +34,16 @@ namespace Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Horario",
+                name: "CategoriaServico",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Hora = table.Column<TimeOnly>(type: "time without time zone", nullable: false),
-                    DataInicio = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DataFim = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Nome = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Horario", x => x.Id);
+                    table.PrimaryKey("PK_CategoriaServico", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -55,10 +53,11 @@ namespace Api.Migrations
                     id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     idbarbeiro = table.Column<int>(type: "integer", nullable: false),
-                    status = table.Column<int>(type: "integer", nullable: false),
                     nomecliente = table.Column<string>(type: "text", nullable: false),
                     numerocliente = table.Column<string>(type: "text", nullable: false),
-                    dtagendamento = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
+                    dtagendamento = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    metodopagamento = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -100,21 +99,22 @@ namespace Api.Migrations
                 {
                     id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    descricao = table.Column<string>(type: "text", nullable: false),
-                    valor = table.Column<decimal>(type: "numeric", nullable: false),
+                    nome = table.Column<string>(type: "text", nullable: false),
+                    valor = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     tempoestimado = table.Column<TimeOnly>(type: "time", nullable: false),
                     dtinicio = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    dtfim = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    BarbeiroId = table.Column<int>(type: "integer", nullable: true)
+                    dtfim = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    idcategoriaservico = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_servico", x => x.id);
                     table.ForeignKey(
-                        name: "FK_servico_barbeiro_BarbeiroId",
-                        column: x => x.BarbeiroId,
-                        principalTable: "barbeiro",
-                        principalColumn: "id");
+                        name: "FK_servico_CategoriaServico_idcategoriaservico",
+                        column: x => x.idcategoriaservico,
+                        principalTable: "CategoriaServico",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -188,6 +188,34 @@ namespace Api.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "barbeiroservico",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    dtinicio = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    dtfim = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    idbarbeiro = table.Column<int>(type: "integer", nullable: false),
+                    idservico = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_barbeiroservico", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_barbeiroservico_barbeiro_idbarbeiro",
+                        column: x => x.idbarbeiro,
+                        principalTable: "barbeiro",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_barbeiroservico_servico_idservico",
+                        column: x => x.idservico,
+                        principalTable: "servico",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_agendamento_idbarbeiro",
                 table: "agendamento",
@@ -220,9 +248,19 @@ namespace Api.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_servico_BarbeiroId",
+                name: "IX_barbeiroservico_idbarbeiro",
+                table: "barbeiroservico",
+                column: "idbarbeiro");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_barbeiroservico_idservico",
+                table: "barbeiroservico",
+                column: "idservico");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_servico_idcategoriaservico",
                 table: "servico",
-                column: "BarbeiroId");
+                column: "idcategoriaservico");
         }
 
         /// <inheritdoc />
@@ -238,19 +276,22 @@ namespace Api.Migrations
                 name: "barbeirohorarioexcecao");
 
             migrationBuilder.DropTable(
-                name: "Horario");
+                name: "barbeiroservico");
 
             migrationBuilder.DropTable(
                 name: "agendamento");
 
             migrationBuilder.DropTable(
-                name: "servico");
-
-            migrationBuilder.DropTable(
                 name: "barbeirohorario");
 
             migrationBuilder.DropTable(
+                name: "servico");
+
+            migrationBuilder.DropTable(
                 name: "barbeiro");
+
+            migrationBuilder.DropTable(
+                name: "CategoriaServico");
         }
     }
 }

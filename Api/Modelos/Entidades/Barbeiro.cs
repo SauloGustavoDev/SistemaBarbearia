@@ -16,9 +16,9 @@ namespace Api.Models.Entity
         public string? Descricao { get; set; }
         public DateTimeOffset DtCadastro { get; set; }
         public DateTime? DtDemissao { get; set; }
-        public List<Servico>? Servicos { get; set; }
-        public List<BarbeiroHorario>? BarbeiroHorario{ get; set; } = new List<BarbeiroHorario>();
-        public List<Agendamento>? Agendamento { get; set; } = new List<Agendamento>();
+        public List<BarbeiroServico>? BarbeiroServicos { get; set; } = new List<BarbeiroServico>();
+        public List<BarbeiroHorario>? BarbeiroHorarios{ get; set; } = new List<BarbeiroHorario>();
+        public List<Agendamento>? Agendamentos { get; set; } = new List<Agendamento>();
         public Barbeiro()
         {
             
@@ -38,11 +38,11 @@ namespace Api.Models.Entity
 
             foreach (var dia in horariosSemana)
             {
-                BarbeiroHorario.Add(new BarbeiroHorario {Hora = dia, TipoDia = (TipoDia)1, DtInicio = DateTime.UtcNow, DtFim = null  });
+                BarbeiroHorarios.Add(new BarbeiroHorario {Hora = dia, TipoDia = (TipoDia)1, DtInicio = DateTime.UtcNow, DtFim = null  });
             }
             foreach (var dia in sabado)
             {
-                BarbeiroHorario.Add(new BarbeiroHorario { Hora = dia, TipoDia = (TipoDia)2, DtInicio = DateTime.UtcNow, DtFim = null });
+                BarbeiroHorarios.Add(new BarbeiroHorario { Hora = dia, TipoDia = (TipoDia)2, DtInicio = DateTime.UtcNow, DtFim = null });
             }
 
         }

@@ -3,7 +3,6 @@ using System;
 using Api.Infraestrutura.Contexto;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,11 +11,9 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Api.Migrations
 {
     [DbContext(typeof(Contexto))]
-    [Migration("20250903012551_updatedobanco2")]
-    partial class updatedobanco2
+    partial class ContextoModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -178,6 +175,40 @@ namespace Api.Migrations
                     b.ToTable("barbeirohorarioexcecao", (string)null);
                 });
 
+            modelBuilder.Entity("Api.Modelos.Entidades.BarbeiroServico", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("DtFim")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dtfim");
+
+                    b.Property<DateTime>("DtInicio")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dtinicio");
+
+                    b.Property<int>("IdBarbeiro")
+                        .HasColumnType("integer")
+                        .HasColumnName("idbarbeiro");
+
+                    b.Property<int>("IdServico")
+                        .HasColumnType("integer")
+                        .HasColumnName("idservico");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdBarbeiro");
+
+                    b.HasIndex("IdServico");
+
+                    b.ToTable("barbeiroservico", (string)null);
+                });
+
             modelBuilder.Entity("Api.Modelos.Entidades.CategoriaServico", b =>
                 {
                     b.Property<int>("Id")
@@ -204,16 +235,10 @@ namespace Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BarbeiroId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("CategoriaServicoId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Descricao")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("descricao");
+                        .HasColumnName("nome");
 
                     b.Property<DateTime?>("DtFim")
                         .HasColumnType("timestamp with time zone")
@@ -223,25 +248,21 @@ namespace Api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("dtinicio");
 
-                    b.Property<int>("IdBarbeiro")
+                    b.Property<int>("IdCategoriaServico")
                         .HasColumnType("integer")
-                        .HasColumnName("idbarbeiro");
+                        .HasColumnName("idcategoriaservico");
 
                     b.Property<TimeOnly>("TempoEstimado")
                         .HasColumnType("time")
                         .HasColumnName("tempoestimado");
 
                     b.Property<decimal>("Valor")
-                        .HasColumnType("numeric")
+                        .HasColumnType("decimal(18,2)")
                         .HasColumnName("valor");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BarbeiroId");
-
-                    b.HasIndex("CategoriaServicoId");
-
-                    b.HasIndex("IdBarbeiro");
+                    b.HasIndex("IdCategoriaServico");
 
                     b.ToTable("servico", (string)null);
                 });
@@ -304,7 +325,7 @@ namespace Api.Migrations
             modelBuilder.Entity("Api.Modelos.Entidades.Agendamento", b =>
                 {
                     b.HasOne("Api.Models.Entity.Barbeiro", "Barbeiro")
-                        .WithMany("Agendamento")
+                        .WithMany("Agendamentos")
                         .HasForeignKey("IdBarbeiro")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -341,7 +362,7 @@ namespace Api.Migrations
                         .IsRequired();
 
                     b.HasOne("Api.Modelos.Entidades.Servico", "Servico")
-                        .WithMany()
+                        .WithMany("AgendamentoServicos")
                         .HasForeignKey("IdServico")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -354,7 +375,7 @@ namespace Api.Migrations
             modelBuilder.Entity("Api.Modelos.Entidades.BarbeiroHorario", b =>
                 {
                     b.HasOne("Api.Models.Entity.Barbeiro", null)
-                        .WithMany("BarbeiroHorario")
+                        .WithMany("BarbeiroHorarios")
                         .HasForeignKey("IdBarbeiro")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -371,27 +392,32 @@ namespace Api.Migrations
                     b.Navigation("BarbeiroHorario");
                 });
 
-            modelBuilder.Entity("Api.Modelos.Entidades.Servico", b =>
+            modelBuilder.Entity("Api.Modelos.Entidades.BarbeiroServico", b =>
                 {
                     b.HasOne("Api.Models.Entity.Barbeiro", "Barbeiro")
-                        .WithMany()
-                        .HasForeignKey("BarbeiroId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Api.Modelos.Entidades.CategoriaServico", "CategoriaServico")
-                        .WithMany()
-                        .HasForeignKey("CategoriaServicoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Api.Models.Entity.Barbeiro", null)
-                        .WithMany("Servicos")
+                        .WithMany("BarbeiroServicos")
                         .HasForeignKey("IdBarbeiro")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Api.Modelos.Entidades.Servico", "Servico")
+                        .WithMany()
+                        .HasForeignKey("IdServico")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Barbeiro");
+
+                    b.Navigation("Servico");
+                });
+
+            modelBuilder.Entity("Api.Modelos.Entidades.Servico", b =>
+                {
+                    b.HasOne("Api.Modelos.Entidades.CategoriaServico", "CategoriaServico")
+                        .WithMany("Servicos")
+                        .HasForeignKey("IdCategoriaServico")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("CategoriaServico");
                 });
@@ -409,13 +435,23 @@ namespace Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Api.Modelos.Entidades.CategoriaServico", b =>
+                {
+                    b.Navigation("Servicos");
+                });
+
+            modelBuilder.Entity("Api.Modelos.Entidades.Servico", b =>
+                {
+                    b.Navigation("AgendamentoServicos");
+                });
+
             modelBuilder.Entity("Api.Models.Entity.Barbeiro", b =>
                 {
-                    b.Navigation("Agendamento");
+                    b.Navigation("Agendamentos");
 
-                    b.Navigation("BarbeiroHorario");
+                    b.Navigation("BarbeiroHorarios");
 
-                    b.Navigation("Servicos");
+                    b.Navigation("BarbeiroServicos");
                 });
 #pragma warning restore 612, 618
         }

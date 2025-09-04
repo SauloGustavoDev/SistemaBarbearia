@@ -91,12 +91,12 @@ namespace Api.Aplicacao.Servicos
             var horariosPadraoAtivos = _contexto.BarbeiroHorario
                 .AsNoTracking()
                 .Include(h => h.BarbeiroHorarioExcecao)
-                .Where(h => h.IdBarbeiro == request.Id && h.DtFim == null)
+                .Where(h => h.IdBarbeiro == request.IdBarbeiro && h.DtFim == null)
                 .ToList();
 
             var horariosOcupados = _contexto.Agendamento
                 .AsNoTracking()
-                .Where(a => a.IdBarbeiro == request.Id && !datasParaConsulta.Contains(a.DtAgendamento.Date.ToUniversalTime()))
+                .Where(a => a.IdBarbeiro == request.IdBarbeiro && !datasParaConsulta.Contains(a.DtAgendamento.Date.ToUniversalTime()))
                 .SelectMany(a => a.AgendamentoHorarios)
                 .Include(x => x.Agendamento)
                 .ToList();

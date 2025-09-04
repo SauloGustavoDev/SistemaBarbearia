@@ -14,9 +14,9 @@ namespace Api.Modelos.Response
         {
             Id = barbeiro.Id;
             Nome = barbeiro.Nome;
-            foreach (var item in barbeiro.Servicos)
+            foreach (var item in barbeiro.BarbeiroServicos)
             {
-                Servicos.Add(new ServicosDetalhesResponse { Descricao = item.Descricao.ToString(), Valor = item.Valor });
+                Servicos.Add(new ServicosDetalhesResponse { Descricao = item.Servico.Descricao.ToString(), Valor = item.Servico.Valor });
             }
         }
     }

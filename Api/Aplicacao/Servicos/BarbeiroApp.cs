@@ -37,9 +37,9 @@ namespace Api.Aplicacao.Servicos
         {
             var barbeiro = _contexto.Set<Barbeiro>()
                            .AsNoTracking()
-                           .Include(x => x.Servicos)
-                           .Include(x => x.Agendamento)
-                           .Include(x => x.BarbeiroHorario)
+                           .Include(x => x.BarbeiroServicos)
+                           .Include(x => x.Agendamentos)
+                           .Include(x => x.BarbeiroHorarios)
                            .FirstOrDefault(x => x.Id == id) ?? throw new Exception("Barbeiro não encontrado");
 
             return new BarbeiroDetalhesResponse(barbeiro);
