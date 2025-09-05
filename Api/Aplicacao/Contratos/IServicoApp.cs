@@ -5,10 +5,11 @@ namespace Api.Aplicacao.Contratos
 {
     public interface IServicoApp
     {
-        List<ServicosDetalhesResponse> ListarServicos(int idBarbeiro);
+        List<ServicosDetalhesResponse> ListarServicosBarbeiro(int idBarbeiro);
         GenericResponse EditarServicosBarbeiro(ServicoBarbeiroEditarRequest request);
         GenericResponse CriarServico(ServicoCriarRequest request);
         GenericResponse DeletarServico(int id);
         GenericResponse AtualizarServico(ServicoAtualizarRequest request);
+        List<ServicosDetalhesResponse> ListarServicos();
     }
 }

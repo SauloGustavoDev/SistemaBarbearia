@@ -2,6 +2,7 @@
 using Api.Infraestrutura.Contexto;
 using Api.Modelos.Dtos;
 using Api.Modelos.Entidades;
+using Api.Modelos.Request;
 using Api.Modelos.Response;
 using Api.Models.Entity;
 using Microsoft.EntityFrameworkCore;
@@ -15,22 +16,84 @@ namespace Api.Aplicacao.Servicos
         {
             _contexto = contexto;
         }
-        public void Cadastrar(BarbeiroCriarRequest barbeiro)
+        public GenericResponse Cadastrar(BarbeiroCriarRequest request)
         {
-            _contexto.Add(new Barbeiro(barbeiro));
-            _contexto.SaveChanges();
+            var erros = new List<string>();
+            if (string.IsNullOrWhiteSpace(request.Senha))
+                erros.Add("A senha é obrigatória.");
+
+            if (string.IsNullOrWhiteSpace(request.Numero))
+                erros.Add("O numero é obrigatório");
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+                erros.Add("O email é obrigatório");
+
+            if (string.IsNullOrWhiteSpace(request.Nome))
+                erros.Add("O nome é obrigatório");
+            
+            if(request.Acesso == 0)
+                erros.Add("O acesso é obrigatório");
+
+            if (erros.Any())
+                return new GenericResponse { Sucesso = false, ErrorMessage = string.Join(" ", erros) };
+
+            try
+            {
+                _contexto.Add(new Barbeiro(request));
+                _contexto.SaveChanges();
+                return new GenericResponse { Sucesso = true };
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Erro ao cadastrar barbeiro: " + ex.Message);
+            }
+            
         }
 
-        public void Editar(Barbeiro barbeiro)
+        public GenericResponse Editar(BarbeiroEditarRequest request)
         {
-            _contexto.Update(barbeiro);
-            _contexto.SaveChanges();
+            var barbeiro = _contexto.Barbeiro.FirstOrDefault(b => b.Id == request.Id);
+            if(barbeiro == null)
+                return new GenericResponse { Sucesso = false, ErrorMessage = "Barbeiro não encontrado" };
+
+            barbeiro.Nome = request.Nome;
+            barbeiro.Email = request.Email;
+            barbeiro.Senha = request.Senha;
+            barbeiro.Numero = request.Numero;
+            barbeiro.Descricao = request.Descricao;
+            barbeiro.Foto = request.Foto;
+            barbeiro.Acesso = request.Acesso;
+            try
+            {
+                _contexto.Barbeiro.Update(barbeiro);
+                _contexto.SaveChanges();
+                return new GenericResponse { Sucesso = true };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado." };
+            }
         }
 
-        public void Excluir(int id)
+        public GenericResponse Excluir(int id)
         {
-            _contexto.Remove(new Barbeiro {Id = id });
-            _contexto.SaveChanges();
+
+            var barbeiro = _contexto.Barbeiro.FirstOrDefault(b => b.Id == id);
+            if (barbeiro == null)
+                return new GenericResponse { Sucesso = false, ErrorMessage = "Barbeiro não encontrado" };
+
+            barbeiro.DtDemissao = DateTime.UtcNow;
+            try
+            {
+                _contexto.Barbeiro.Update(barbeiro);
+                _contexto.SaveChanges();
+                return new GenericResponse { Sucesso = true };
+            }
+            catch (Exception ex)
+            {
+                return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado." };
+            }
         }
 
         public BarbeiroDetalhesResponse BarbeiroDetalhes(int id)
@@ -51,9 +114,6 @@ namespace Api.Aplicacao.Servicos
                 .AsNoTracking()
                 .Where(x => x.DtDemissao == null)
                 .ToList();
-
-            if (barbeiros.Count == 0)
-                throw new Exception("Nenhnum barbeiro encontrado");
 
             var data = new List<BarbeiroDetalhesResponse>();
             foreach (var barbeiro in barbeiros)

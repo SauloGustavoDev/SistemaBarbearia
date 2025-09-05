@@ -13,12 +13,18 @@ namespace Api.Controllers
         {
             _app = app;
         }
-
         [HttpGet("Servicos")]
-        public IActionResult ListarServicos([FromHeader] int idBarbeiro)
+        public IActionResult ServicosBarbeiro()
+        {
+            var data = _app.ListarServicos();
+            return Ok(data);
+        }
+
+        [HttpGet("ServicosBarbeiro")]
+        public IActionResult ServicosBarbeiro([FromHeader] int idBarbeiro)
         {
             idBarbeiro = idBarbeiro == 0 ? GetUserId() : idBarbeiro;
-            var data = _app.ListarServicos(idBarbeiro);
+            var data = _app.ListarServicosBarbeiro(idBarbeiro);
             return Ok(data);
         }
         [HttpPatch("ServicosBarbeiro")]

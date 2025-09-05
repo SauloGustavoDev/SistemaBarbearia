@@ -1,5 +1,6 @@
 ﻿using Api.Aplicacao.Contratos;
 using Api.Modelos.Dtos;
+using Api.Modelos.Request;
 using Api.Models.Entity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,20 +21,20 @@ namespace Api.Controllers
         [HttpPost("Barbeiro")]
         public IActionResult CriarBarbeiro([FromBody] BarbeiroCriarRequest barbeiro)
         {
-            _app.Cadastrar(barbeiro);
+            var data = _app.Cadastrar(barbeiro);
             return Ok();
         }
         [HttpPut("Barbeiro")]
-        public IActionResult AtualizarBarbeiro(Barbeiro barbeiro)
+        public IActionResult AtualizarBarbeiro(BarbeiroEditarRequest barbeiro)
         {
-            _app.Editar(barbeiro);
+            var data = _app.Editar(barbeiro);
             return Ok();
         }
 
         [HttpDelete("Barbeiro")]
         public IActionResult ExcluirBarbeiro(int id)
         {
-            _app.Excluir(id);
+            var data = _app.Excluir(id);
             return Ok();
         }
 

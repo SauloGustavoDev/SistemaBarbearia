@@ -15,25 +15,23 @@ namespace Api.Aplicacao.Servicos
             _contexto = contexto;
         }
 
+
         public GenericResponse CriarServico(ServicoCriarRequest request)
         {
             var erros = new List<string>();
+
             if (string.IsNullOrWhiteSpace(request.Descricao))
-            {
                 erros.Add("A descrição do serviço é obrigatória.");
-            }
+
             if (request.Valor <= 0)
-            {
                 erros.Add("O valor do serviço deve ser maior que zero.");
-            }
+
             if (request.TempoEstimado == default(TimeOnly))
-            {
                 erros.Add("O tempo estimado do serviço é obrigatório.");
-            }
+
             if (request.Categoria <= 0)
-            {
                 erros.Add("A categoria do serviço é obrigatória.");
-            }
+
             if (erros.Any())
                 return new GenericResponse { Sucesso = false, ErrorMessage = string.Join(" ", erros) };
 
@@ -167,10 +165,10 @@ namespace Api.Aplicacao.Servicos
             }
         }
 
-        public List<ServicosDetalhesResponse> ListarServicos(int idBarbeiro)
+        public List<ServicosDetalhesResponse> ListarServicosBarbeiro(int idBarbeiro)
         {
             var servicos = _contexto.BarbeiroServico
-                .Where(s =>  s.IdBarbeiro == idBarbeiro)
+                .Where(s =>  s.IdBarbeiro == idBarbeiro && s.DtFim == null)
                 .Include(x => x.Servico)
                 .Select(s => new ServicosDetalhesResponse
                 {
@@ -183,6 +181,21 @@ namespace Api.Aplicacao.Servicos
             return servicos;
         }
 
+        public List<ServicosDetalhesResponse> ListarServicos()
+        {
+            var servicos = _contexto.Servico
+                .Where(s => s.DtFim == null)
+                .Include(x => x.CategoriaServico)
+                .Select(s => new ServicosDetalhesResponse
+                {
+                    Id = s.Id,
+                    Descricao = s.Descricao,
+                    Valor = s.Valor,
+                    Categoria = s.CategoriaServico.Descricao
+                })
+                .ToList();
 
+            return servicos;
+        }
     }
 }

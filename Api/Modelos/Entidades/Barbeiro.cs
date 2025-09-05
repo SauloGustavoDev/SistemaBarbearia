@@ -33,63 +33,58 @@ namespace Api.Models.Entity
             Email = barbeiroDto.Email;
             DtCadastro = DateTimeOffset.Now.ToUniversalTime();
 
-            var horariosSemana = DiasSemanas();
-            var sabado = DiaSabado();
+            var horariosSemana = MontarHorarioDiaSemana();
+            var sabado = MontarHorarioSabado();
 
             foreach (var dia in horariosSemana)
             {
-                BarbeiroHorarios.Add(new BarbeiroHorario {Hora = dia, TipoDia = (TipoDia)1, DtInicio = DateTime.UtcNow, DtFim = null  });
+                BarbeiroHorarios.Add(new BarbeiroHorario {Hora = dia, TipoDia = TipoDia.SegundaASexta, DtInicio = DateTime.UtcNow, DtFim = null  });
             }
             foreach (var dia in sabado)
             {
-                BarbeiroHorarios.Add(new BarbeiroHorario { Hora = dia, TipoDia = (TipoDia)2, DtInicio = DateTime.UtcNow, DtFim = null });
+                BarbeiroHorarios.Add(new BarbeiroHorario { Hora = dia, TipoDia = TipoDia.Sabado, DtInicio = DateTime.UtcNow, DtFim = null });
             }
 
         }
 
-        private List<TimeOnly> DiasSemanas()
+        private List<TimeOnly> MontarHorarioDiaSemana()
         {
-            return new List<TimeOnly>
+            var horarios = new List<TimeOnly>();
+            var horaManha = TimeOnly.Parse("10:00");
+            horarios.Add(horaManha);
+            while (horaManha < TimeOnly.Parse("12:00"))
             {
-                new TimeOnly(10, 0),
-                new TimeOnly(10, 40),
-                new TimeOnly(11, 20),
-                new TimeOnly(12, 0),
-                new TimeOnly(13, 20),
-                new TimeOnly(14, 0),
-                new TimeOnly(14, 40),
-                new TimeOnly(15, 20),
-                new TimeOnly(16, 0),
-                new TimeOnly(16, 40),
-                new TimeOnly(17, 20),
-                new TimeOnly(18, 0),
-                new TimeOnly(18, 40),
-                new TimeOnly(19, 20),
-                new TimeOnly(20, 0)
-            };
+                horaManha = horaManha.AddMinutes(40);
+                horarios.Add(horaManha);
+            }
+            var horaTarde = TimeOnly.Parse("13:20");
+            horarios.Add(horaTarde);
+            while (horaTarde < TimeOnly.Parse("20:00"))
+            {
+                horaTarde = horaTarde.AddMinutes(40);
+                horarios.Add(horaTarde);
+            }
+            return horarios;
         }
 
-        private List<TimeOnly> DiaSabado()
+        private List<TimeOnly> MontarHorarioSabado()
         {
-            return new List<TimeOnly>
+            var horarios = new List<TimeOnly>();
+            var horaManha = TimeOnly.Parse("09:00");
+            horarios.Add(horaManha);
+            while (horaManha < TimeOnly.Parse("12:20"))
             {
-                new TimeOnly(9, 0),
-                new TimeOnly(9, 40),
-                new TimeOnly(10, 20),
-                new TimeOnly(11, 0),
-                new TimeOnly(11, 40),
-                new TimeOnly(12, 20),
-                new TimeOnly(13, 20),
-                new TimeOnly(14, 0),
-                new TimeOnly(14, 40),
-                new TimeOnly(15, 20),
-                new TimeOnly(16, 0),
-                new TimeOnly(16, 40),
-                new TimeOnly(17, 20),
-                new TimeOnly(18, 0),
-                new TimeOnly(18, 40),
-                new TimeOnly(19, 0)
-            };
+                horaManha = horaManha.AddMinutes(40);
+                horarios.Add(horaManha);
+            }
+            var horaTarde = TimeOnly.Parse("13:20");
+            horarios.Add(horaTarde);
+            while (horaTarde < TimeOnly.Parse("19:00"))
+            {
+                horaTarde = horaTarde.AddMinutes(40);
+                horarios.Add(horaTarde);
+            }
+            return horarios;
         }
     }
 }
