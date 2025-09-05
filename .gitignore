@@ -3,6 +3,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Ignora a pasta de migrações do Entity Framework para evitar conflitos.
+# Cada desenvolvedor deve gerar suas próprias migrações locais.
+Api/Infraestrutura/Migrations/
+ 
 # User-specific files
 *.rsuser
 *.suo
