@@ -52,5 +52,12 @@ namespace Api.Controllers
             var data = _app.AtualizarServico(request);
             return Ok(data);
         }
+        [HttpPost("CategoriaServico")]
+        public IActionResult CriarCategoriaServico([FromBody] string request)
+        {
+            var data = _app.CriarCategoriaServico(request);
+            return Ok(data);
+        }
+
     }
 }

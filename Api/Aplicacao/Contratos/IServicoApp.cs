@@ -11,5 +11,6 @@ namespace Api.Aplicacao.Contratos
         GenericResponse DeletarServico(int id);
         GenericResponse AtualizarServico(ServicoAtualizarRequest request);
         List<ServicosDetalhesResponse> ListarServicos();
+        GenericResponse CriarCategoriaServico(string request);
     }
 }

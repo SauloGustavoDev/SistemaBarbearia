@@ -1,4 +1,5 @@
 ﻿using Api.Aplicacao.Contratos;
+using Api.Aplicacao.Helpers;
 using Api.Infraestrutura.Contexto;
 using Api.Modelos.Entidades;
 using Api.Modelos.Request;
@@ -26,7 +27,7 @@ namespace Api.Aplicacao.Servicos
             if (request.Valor <= 0)
                 erros.Add("O valor do serviço deve ser maior que zero.");
 
-            if (request.TempoEstimado == default(TimeOnly))
+            if (request.TempoEstimado == 0)
                 erros.Add("O tempo estimado do serviço é obrigatório.");
 
             if (request.Categoria <= 0)
@@ -41,9 +42,9 @@ namespace Api.Aplicacao.Servicos
 
             var novoServico = new Servico
             {
-                Descricao = request.Descricao, 
+                Descricao = request.Descricao,
                 Valor = request.Valor,
-                TempoEstimado = request.TempoEstimado,
+                TempoEstimado = new TimeOnly(0, request.TempoEstimado, 0),
                 DtInicio = DateTime.UtcNow,
                 IdCategoriaServico = request.Categoria
             };
@@ -55,7 +56,7 @@ namespace Api.Aplicacao.Servicos
 
                 return new GenericResponse { Sucesso = true };
             }
-            catch (Exception ex)
+            catch
             {
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado." };
             }
@@ -78,7 +79,7 @@ namespace Api.Aplicacao.Servicos
             {
                 Descricao = request.Descricao,
                 Valor = request.Valor,
-                TempoEstimado = request.TempoEstimado,
+                TempoEstimado = new TimeOnly(0,request.TempoEstimado,0),
                 DtInicio = DateTime.UtcNow,
                 IdCategoriaServico = request.Categoria
             };
@@ -88,10 +89,24 @@ namespace Api.Aplicacao.Servicos
                 _contexto.SaveChanges();
                 return new GenericResponse { Sucesso = true};
             }
-            catch (Exception ex)
+            catch
             {
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado ao atualizar o serviço." };
             }
+        }
+
+        public GenericResponse CriarCategoriaServico(string request)
+        {
+            var novaCategoria = new CategoriaServico
+            {
+                Descricao = request,
+                DtInicio = DateTime.UtcNow
+            };
+            return MontarGenericResponse.TryExecute(() =>
+            {
+                _contexto.CategoriaServico.Add(novaCategoria);
+                _contexto.SaveChanges();
+            }, "Ocorreu um erro inesperado ao criar a categoria.");
         }
 
         public GenericResponse DeletarServico(int id)
@@ -101,15 +116,10 @@ namespace Api.Aplicacao.Servicos
                     return new GenericResponse { Sucesso = false, ErrorMessage = $"Serviço ativo com ID {id} não foi encontrado." };
 
                 servicoParaDesativar.DtFim = DateTime.UtcNow;
-            try
+            return MontarGenericResponse.TryExecute(() =>
             {
                 _contexto.SaveChanges();
-                return new GenericResponse { Sucesso = true};
-            }
-            catch (Exception ex)
-            {
-                return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado ao desativar o serviço." };
-            }
+            }, "Ocorreu um erro inesperado ao desativar o serviço.");
         }
         public GenericResponse EditarServicosBarbeiro(ServicoBarbeiroEditarRequest request)
         {
@@ -155,10 +165,9 @@ namespace Api.Aplicacao.Servicos
 
                 _contexto.SaveChanges();
                 transaction.Commit();
-
                 return new GenericResponse { Sucesso = true};
             }
-            catch (Exception ex)
+            catch
             {
                 transaction.Rollback();
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado ao atualizar os serviços." };
@@ -170,11 +179,13 @@ namespace Api.Aplicacao.Servicos
             var servicos = _contexto.BarbeiroServico
                 .Where(s =>  s.IdBarbeiro == idBarbeiro && s.DtFim == null)
                 .Include(x => x.Servico)
+                .ThenInclude(x => x.CategoriaServico)
                 .Select(s => new ServicosDetalhesResponse
                 {
                     Id = s.Id,
                     Descricao = s.Servico.Descricao,
-                    Valor = s.Servico.Valor
+                    Valor = s.Servico.Valor,
+                    Categoria = s.Servico.CategoriaServico.Descricao
                 })
                 .ToList();
 

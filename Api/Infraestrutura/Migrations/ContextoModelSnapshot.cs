@@ -213,17 +213,19 @@ namespace Api.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Descricao")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("descricao");
 
                     b.HasKey("Id");
 
-                    b.ToTable("CategoriaServico");
+                    b.ToTable("categoriaservico", (string)null);
                 });
 
             modelBuilder.Entity("Api.Modelos.Entidades.Servico", b =>

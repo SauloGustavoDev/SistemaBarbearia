@@ -5,9 +5,7 @@ using Api.Modelos.Entidades;
 using Api.Modelos.Enums;
 using Api.Modelos.Request;
 using Api.Modelos.Response;
-using Api.Models.Entity;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace Api.Aplicacao.Servicos
 {
@@ -44,7 +42,7 @@ namespace Api.Aplicacao.Servicos
 
                 return new GenericResponse { Sucesso = true };
             }
-            catch (Exception ex)
+            catch
             {
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado ao criar o agendamento." };
             }
@@ -236,7 +234,7 @@ namespace Api.Aplicacao.Servicos
                 _contexto.SaveChanges();
                 return new GenericResponse { Sucesso = true };
             }
-            catch (Exception ex)
+            catch
             {
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado ao atualizar o agendamento." };
             }

@@ -25,6 +25,40 @@ namespace Api.Infraestrutura.Contexto
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
+            modelBuilder.Entity<CategoriaServico>(entity =>
+            {
+                // Define o nome da tabela como 'categoriaservico' (tudo em minúsculo)
+                entity.ToTable("categoriaservico");
+
+                // Define a chave primária
+                entity.HasKey(e => e.Id);
+
+                // Mapeia a propriedade 'Id' para a coluna 'id'
+                entity.Property(e => e.Id).HasColumnName("id");
+
+                // Mapeia a propriedade 'Descricao' para a coluna 'descricao'
+                // e a define como obrigatória (NOT NULL no banco)
+                // Renomeei para 'Nome' para consistência, mas mantive 'Descricao' como você pediu.
+                entity.Property(e => e.Descricao)
+                      .HasColumnName("descricao")
+                      .IsRequired();
+
+
+                entity.Property(e => e.DtInicio).HasColumnName("dtinicio");
+                entity.Property(e => e.DtFim).HasColumnName("dtfim");
+
+                // Configura o relacionamento "Um-para-Muitos"
+                // Uma CategoriaServico TEM MUITOS Servicos...
+                // ...e cada Servico TEM UMA CategoriaServico.
+                // A chave estrangeira ('IdCategoriaServico') está definida na entidade 'Servico'.
+                entity.HasMany(c => c.Servicos)
+                      .WithOne(s => s.CategoriaServico)
+                      .HasForeignKey(s => s.IdCategoriaServico)
+                      .OnDelete(DeleteBehavior.Restrict); // Impede apagar uma categoria que ainda tenha serviços associados.
+            });
+
+
             // BARBEIRO
             modelBuilder.Entity<Barbeiro>(entity =>
             {

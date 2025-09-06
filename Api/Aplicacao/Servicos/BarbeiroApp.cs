@@ -59,18 +59,15 @@ namespace Api.Aplicacao.Servicos
 
             barbeiro.Nome = request.Nome;
             barbeiro.Email = request.Email;
-            barbeiro.Senha = request.Senha;
             barbeiro.Numero = request.Numero;
             barbeiro.Descricao = request.Descricao;
-            barbeiro.Foto = request.Foto;
-            barbeiro.Acesso = request.Acesso;
             try
             {
                 _contexto.Barbeiro.Update(barbeiro);
                 _contexto.SaveChanges();
                 return new GenericResponse { Sucesso = true };
             }
-            catch (Exception ex)
+            catch
             {
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado." };
             }
@@ -90,7 +87,7 @@ namespace Api.Aplicacao.Servicos
                 _contexto.SaveChanges();
                 return new GenericResponse { Sucesso = true };
             }
-            catch (Exception ex)
+            catch
             {
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado." };
             }
