@@ -104,14 +104,14 @@ namespace Api.Aplicacao.Servicos
             foreach (var data in datasParaConsulta)
             {
                 var horariosDoDia = horariosPadraoAtivos
-                    .Where(h => h.TipoDia == (TipoDia)ValidaUtilOuSabado(data));
+                    .Where(h => h.TipoDia == (TipoDia)ValidaUtilOuSabado(data)).OrderBy(x => x.Hora).ToList();
 
                 var horariosDisponiveis = new List<HorarioResponse>();
 
                 foreach (var horario in horariosDoDia)
                 {
                     bool temExcecao = horario.BarbeiroHorarioExcecao?.DtExcecao.Date.ToUniversalTime() == data.Date.ToUniversalTime();
-                    bool estaOcupado = horariosOcupados.Any(x => x.Agendamento.DtAgendamento.ToUniversalTime() == data.ToUniversalTime() && x.IdBarbeiroHorario == horario.Id);
+                    bool estaOcupado = horariosOcupados.Any(x => x.Agendamento.DtAgendamento.Date.ToUniversalTime() == data.Date.ToUniversalTime() && x.IdBarbeiroHorario == horario.Id);
 
                     if (!temExcecao && !estaOcupado)
                     {
@@ -132,52 +132,70 @@ namespace Api.Aplicacao.Servicos
 
                 foreach (var servico in servicosSelecionados)
                 {
-                    // TimeOnly não pode ser somado diretamente, então convertemos para TimeSpan.
                     duracaoTotalServicos += servico.TempoEstimado.ToTimeSpan();
                 }
 
-                if (duracaoTotalServicos > TimeSpan.FromMinutes(40))
+                int slotsNecessarios = (int)Math.Ceiling(duracaoTotalServicos.TotalMinutes / 40.0);
+
+                if (slotsNecessarios <= 1)
                 {
-
-                    for (int j = 0; j < horariosDisponiveis.Count - 1; j++)
+                    if (horariosDisponiveis.Any())
                     {
-                        if (horariosDisponiveis[j].Hora.ToTimeSpan() == TimeSpan.FromHours(12) && data.DayOfWeek != DayOfWeek.Saturday)
+                        respostaFinal.Add(new BarbeiroHorarioResponse
                         {
-                            if (horariosDisponiveis[j + 1].Hora.ToTimeSpan() != new TimeSpan(13, 20, 0) && duracaoTotalServicos > TimeSpan.FromMinutes(80))
+                            Data = data,
+                            Horarios = horariosDisponiveis
+                        });
+                    }
+                    continue;
+                }
+
+                var horariosDeInicioValidos = new List<HorarioResponse>();
+
+                for (int i = 0; i < horariosDisponiveis.Count - slotsNecessarios + 1; i++)
+                {
+                    var horarioDeInicioPotencial = horariosDisponiveis[i];
+                    bool sequenciaContinua = true;
+
+                    for (int j = 0; j < slotsNecessarios - 1; j++)
+                    {
+                        var horarioAtual = horariosDisponiveis[i + j];
+                        var proximoHorario = horariosDisponiveis[i + j + 1];
+
+                        if (horarioAtual.Hora.AddMinutes(40) != proximoHorario.Hora)
+                        {
+                            bool ehPausaAlmoco = data.DayOfWeek != DayOfWeek.Saturday &&
+                                                  horarioAtual.Hora.ToTimeSpan() == new TimeSpan(12, 0, 0) &&
+                                                  proximoHorario.Hora.ToTimeSpan() == new TimeSpan(13, 20, 0);
+
+                            if (!ehPausaAlmoco)
                             {
-                                horariosDisponiveis.RemoveAt(j);
+                                sequenciaContinua = false;
                                 break;
                             }
-                        }
-
-                        if (horariosDisponiveis[j].Hora.ToTimeSpan() == new TimeSpan(12, 20, 0) && data.DayOfWeek == DayOfWeek.Saturday)
-                        {
-                            if (horariosDisponiveis[j].Hora.AddMinutes(60) != horariosDisponiveis[j + 1].Hora && duracaoTotalServicos > TimeSpan.FromMinutes(60))
-                            {
-                                horariosDisponiveis.RemoveAt(j);
-                                break;
-                            }
-                        }
-
-                        if (horariosDisponiveis[j].Hora.AddMinutes(40) != horariosDisponiveis[j + 1].Hora && duracaoTotalServicos > TimeSpan.FromMinutes(40))
-                        {
-                            horariosDisponiveis.RemoveAt(j);
-                            break;
                         }
                     }
+
+                    if (sequenciaContinua)
+                    {
+                        horariosDeInicioValidos.Add(horarioDeInicioPotencial);
+                    }
                 }
-                if (horariosDisponiveis.Any())
+
+                if (horariosDeInicioValidos.Any())
                 {
                     respostaFinal.Add(new BarbeiroHorarioResponse
                     {
                         Data = data,
-                        Horarios = horariosDisponiveis
+                        Horarios = horariosDeInicioValidos
                     });
                 }
             }
 
-            return respostaFinal;
-
+            return respostaFinal
+                .OrderBy(x => x.Data)
+                .ThenBy(x => x.Horarios.FirstOrDefault()?.Hora)
+                .ToList();
         }
 
         private int ValidaUtilOuSabado(DateTime data)
@@ -243,16 +261,23 @@ namespace Api.Aplicacao.Servicos
         public AgendamentoAtualResponse AgendamentoAtual(int idBarbeiro)
         {
             var agendamento = _contexto.Agendamento
-                .AsNoTracking()
-                .Where(a => a.IdBarbeiro == idBarbeiro &&
-                            (a.Status == Status.Pendente || a.Status == Status.Confirmado))
-                .Include(a => a.Barbeiro)
-                .Include(a => a.AgendamentoHorarios)
-                .Include(a => a.AgendamentoServicos)
-                .ThenInclude(a => a.Servico)
-                .OrderBy(a => a.DtAgendamento)
-                .FirstOrDefault();
-            
+                             .AsNoTracking()
+                             .Where(a => a.IdBarbeiro == idBarbeiro &&
+                             (a.Status == Status.Pendente || a.Status == Status.Confirmado))
+                             .Include(a => a.Barbeiro)
+                             .Include(a => a.AgendamentoHorarios)
+                             .ThenInclude(b => b.BarbeiroHorario)
+                             .Include(a => a.AgendamentoServicos)
+                             .ThenInclude(a => a.Servico)
+                             .OrderBy(a => a.DtAgendamento)
+                            .ThenBy(a => a.AgendamentoHorarios
+                                .Select(ah => ah.BarbeiroHorario.Hora)
+                                .FirstOrDefault())
+                            .FirstOrDefault();
+
+            if (agendamento == null)
+                throw new Exception("Nenhum horário agendado");
+
             var agendamentoAtual = new AgendamentoAtualResponse(agendamento);
 
             return agendamentoAtual;
