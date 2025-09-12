@@ -1,4 +1,5 @@
 ﻿using Api.Aplicacao.Contratos;
+using Api.Aplicacao.Helpers;
 using Api.Infraestrutura;
 using Api.Infraestrutura.Contexto;
 using Api.Modelos.Request;
@@ -29,14 +30,13 @@ namespace Api.Aplicacao.Servicos
             if (barbeiro == null)
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Barbeiro não encontrado" };
 
-            if (barbeiro != null)
+            barbeiro.Senha = novaSenha; // ⚠️ de preferência a senha deve estar hasheada
+
+            return MontarGenericResponse.TryExecute(() =>
             {
-                barbeiro.Senha = novaSenha; // ⚠️ de preferência a senha deve estar hasheada
                 _contexto.Update(barbeiro);
                 _contexto.SaveChanges();
-            }
-
-            return new GenericResponse { Sucesso = true };
+            }, "Falha ao atualizar a senha");
         }
         public GenericResponse EsqueceuSenha(BarbeiroEsqueceSenhaRequest request)
         {
@@ -45,14 +45,19 @@ namespace Api.Aplicacao.Servicos
                             .Where(x => x.Numero == request.Numero && x.Email == request.Email)
                             .FirstOrDefault();
 
+            if (barbeiro == null)
+                return new GenericResponse { Sucesso = false, ErrorMessage = "Numero ou email invalido" };
+
             if (barbeiro.Email == null)
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Numero ou email invalido" };
 
-            var token = _token.CreateToken(barbeiro);
 
-            _notificacao.SendEmailNewPassword(barbeiro.Email, token);
 
-            return new GenericResponse { Sucesso = true };
+            return MontarGenericResponse.TryExecute(() =>
+            {
+                var token = _token.CreateToken(barbeiro);
+                _notificacao.SendEmailNewPassword(barbeiro.Email, token);
+            }, "Falha ao atualizar a senha");
         }
 
         public GenericResponse Login(BarbeiroLoginRequest login)
@@ -61,17 +66,10 @@ namespace Api.Aplicacao.Servicos
                             .AsNoTracking()
                             .FirstOrDefault(x => x.Numero == login.Numero && x.Senha == login.Senha);
 
-            if(barbeiro == null)
-                return new GenericResponse{
-                    Sucesso = false, 
-                    ErrorMessage = "Usuário ou senha incorretos" 
-                };
+            if (barbeiro == null)
+                return new GenericResponse { Sucesso = false, ErrorMessage = "Usuário ou senha incorretos" };
 
-            return new GenericResponse
-            {
-                Sucesso = true,
-                Token = _token.CreateToken(barbeiro)
-            };
+            return new GenericResponse { Sucesso = true, Token = _token.CreateToken(barbeiro) };
         }
     }
 }

@@ -49,17 +49,11 @@ namespace Api.Aplicacao.Servicos
                 IdCategoriaServico = request.Categoria
             };
 
-            try
+            return MontarGenericResponse.TryExecute(() =>
             {
                 _contexto.Servico.Add(novoServico);
                 _contexto.SaveChanges();
-
-                return new GenericResponse { Sucesso = true };
-            }
-            catch
-            {
-                return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado." };
-            }
+            }, "Ocorreu um erro inesperado ao criar o serviço.");
         }
         public GenericResponse AtualizarServico(ServicoAtualizarRequest request)
         {
@@ -84,15 +78,11 @@ namespace Api.Aplicacao.Servicos
                 IdCategoriaServico = request.Categoria
             };
             _contexto.Servico.Add(novoServico);
-            try
+
+            return MontarGenericResponse.TryExecute(() =>
             {
                 _contexto.SaveChanges();
-                return new GenericResponse { Sucesso = true};
-            }
-            catch
-            {
-                return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado ao atualizar o serviço." };
-            }
+            }, "Ocorreu um erro inesperado ao atualizar o serviço.");
         }
 
         public GenericResponse CriarCategoriaServico(string request)

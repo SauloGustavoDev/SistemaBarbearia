@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [ApiController]
+    [Route("[controller]")]
     public class TestesController : GsSystemControllerBase
     {
         private readonly ITestesApp _app;

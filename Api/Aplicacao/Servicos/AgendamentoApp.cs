@@ -1,4 +1,5 @@
 ﻿using Api.Aplicacao.Contratos;
+using Api.Aplicacao.Helpers;
 using Api.Infraestrutura;
 using Api.Infraestrutura.Contexto;
 using Api.Modelos.Entidades;
@@ -19,33 +20,31 @@ namespace Api.Aplicacao.Servicos
 
         public GenericResponse CriarAgendamento(AgendamentoCriarRequest request)
         {
-            try
+            request.DtAgendamento = request.DtAgendamento.ToUniversalTime();
+
+            var horariosOcupados = _contexto.AgendamentoHorario
+                .Include(ah => ah.Agendamento)
+                .Where(ah => ah.Agendamento.DtAgendamento.Date == request.DtAgendamento.Date &&
+                             ah.Agendamento.IdBarbeiro == request.IdBarbeiro &&
+                             request.IdsHorario.Contains(ah.IdBarbeiroHorario))
+                .ToList();
+
+            if (horariosOcupados.Any())
             {
-                request.DtAgendamento = request.DtAgendamento.ToUniversalTime();
+                var idsOcupados = string.Join(", ", horariosOcupados.Select(h => h.IdBarbeiroHorario));
+                return new GenericResponse { Sucesso = false, ErrorMessage = $"Os seguintes horários já estão ocupados: {idsOcupados}." };
+            }
 
-                var horariosOcupados = _contexto.AgendamentoHorario
-                    .Include(ah => ah.Agendamento)
-                    .Where(ah => ah.Agendamento.DtAgendamento.Date == request.DtAgendamento.Date &&
-                                 ah.Agendamento.IdBarbeiro == request.IdBarbeiro &&
-                                 request.IdsHorario.Contains(ah.IdBarbeiroHorario))
-                    .ToList();
+            var novoAgendamento = new Agendamento(request);
 
-                if (horariosOcupados.Any())
-                {
-                    var idsOcupados = string.Join(", ", horariosOcupados.Select(h => h.IdBarbeiroHorario));
-                    return new GenericResponse { Sucesso = false, ErrorMessage = $"Os seguintes horários já estão ocupados: {idsOcupados}." };
-                }
 
-                var novoAgendamento = new Agendamento(request);
+
+            return MontarGenericResponse.TryExecute(() =>
+            {
                 _contexto.Agendamento.Add(novoAgendamento);
                 _contexto.SaveChanges();
+            }, "Ocorreu um erro inesperado ao criar o agendamento.");
 
-                return new GenericResponse { Sucesso = true };
-            }
-            catch
-            {
-                return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado ao criar o agendamento." };
-            }
         }
         public List<AgendamentoResponse> ListarAgendamentos(int idBarbeiro, int idServico, string nomeCliente, DateTime? dtInicio, DateTime? dtFim, int status)
         {
@@ -214,9 +213,10 @@ namespace Api.Aplicacao.Servicos
             agendamento.MetodoPagamento = request.MetodoPagamento;
             agendamento.Status = Status.Concluido;
 
-            _contexto.SaveChanges();
-
-            return new GenericResponse { Sucesso = true, ErrorMessage = "Agendamento completado!" };
+            return MontarGenericResponse.TryExecute(() =>
+            {
+                _contexto.SaveChanges();
+            }, "Falha ao completar o agendamento.");
         }
 
         public GenericResponse CancelarAgendamento(int id)
@@ -229,33 +229,30 @@ namespace Api.Aplicacao.Servicos
 
             agendamento.Status = Status.CanceladoPeloBarbeiro;
 
-            _contexto.SaveChanges();
-            return new GenericResponse { Sucesso = true, ErrorMessage = "Agendamento cancelado!" };
+            return MontarGenericResponse.TryExecute(() =>
+            {
+                _contexto.SaveChanges();
+            }, "Falha ao cancelar agendamento.");
         }
 
         public GenericResponse AtualizarAgendamento(AgendamentoAtualizarRequest agendamento)
         {
-            try
+            var agendamentoExistente = _contexto.Agendamento
+                .Include(a => a.AgendamentoServicos)
+                .FirstOrDefault(a => a.Id == agendamento.Id);
+
+            if (agendamentoExistente == null)
             {
-                var agendamentoExistente = _contexto.Agendamento
-                    .Include(a => a.AgendamentoServicos)
-                    .FirstOrDefault(a => a.Id == agendamento.Id);
+                return new GenericResponse { Sucesso = false, ErrorMessage = "Agendamento não encontrado." };
+            }
 
-                if (agendamentoExistente == null)
-                {
-                    return new GenericResponse { Sucesso = false, ErrorMessage = "Agendamento não encontrado." };
-                }
-
-                agendamentoExistente.MetodoPagamento = agendamento.MetodoPagamento;
-                _contexto.AgendamentoServico.RemoveRange(agendamentoExistente.AgendamentoServicos);
-                agendamentoExistente.AgendamentoServicos = agendamento.IdsServico.Select(x => new AgendamentoServico { IdAgendamento = agendamento.Id, IdServico = x }).ToList();
+            agendamentoExistente.MetodoPagamento = agendamento.MetodoPagamento;
+            _contexto.AgendamentoServico.RemoveRange(agendamentoExistente.AgendamentoServicos);
+            agendamentoExistente.AgendamentoServicos = agendamento.IdsServico.Select(x => new AgendamentoServico { IdAgendamento = agendamento.Id, IdServico = x }).ToList();
+            return MontarGenericResponse.TryExecute(() =>
+            {
                 _contexto.SaveChanges();
-                return new GenericResponse { Sucesso = true };
-            }
-            catch
-            {
-                return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado ao atualizar o agendamento." };
-            }
+            }, "Falha ao atualizar agendamento");
         }
 
         public AgendamentoAtualResponse AgendamentoAtual(int idBarbeiro)

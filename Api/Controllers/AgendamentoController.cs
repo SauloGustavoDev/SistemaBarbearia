@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [ApiController]
+    [Route("[controller]")]
     public class AgendamentoController : GsSystemControllerBase
     {
         private readonly IAgendamentoApp _app;

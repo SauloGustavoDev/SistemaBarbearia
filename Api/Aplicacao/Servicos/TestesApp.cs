@@ -1,4 +1,5 @@
 ﻿using Api.Aplicacao.Contratos;
+using Api.Aplicacao.Helpers;
 using Api.Infraestrutura.Contexto;
 using Api.Modelos.Dtos;
 using Api.Modelos.Entidades;
@@ -92,7 +93,7 @@ namespace Api.Aplicacao.Servicos
                 }
 
                 transaction.Commit(); // Confirma todas as operações
-                return new GenericResponse { Sucesso = true};
+                return new GenericResponse { Sucesso = true };
             }
             catch (Exception ex)
             {
@@ -105,29 +106,23 @@ namespace Api.Aplicacao.Servicos
 
         public GenericResponse LimparBancoDeDados()
         {
-            try
-            {
 
-            
-            _contexto.AgendamentoServico.RemoveRange(_contexto.AgendamentoServico);
-            _contexto.AgendamentoHorario.RemoveRange(_contexto.AgendamentoHorario);
-            _contexto.BarbeiroHorarioExcecao.RemoveRange(_contexto.BarbeiroHorarioExcecao);
-            _contexto.BarbeiroServico.RemoveRange(_contexto.BarbeiroServico);
-            _contexto.SaveChanges();
-            _contexto.Agendamento.RemoveRange(_contexto.Agendamento);
-            _contexto.BarbeiroHorario.RemoveRange(_contexto.BarbeiroHorario);
-            _contexto.SaveChanges();
-            _contexto.Servico.RemoveRange(_contexto.Servico);
-            _contexto.CategoriaServico.RemoveRange(_contexto.CategoriaServico);
-            _contexto.SaveChanges();
-            _contexto.Barbeiro.RemoveRange(_contexto.Barbeiro);
-            _contexto.SaveChanges();
-                return new GenericResponse{Sucesso = true};
-            }
-            catch
+            return MontarGenericResponse.TryExecute(() =>
             {
-                return new GenericResponse{Sucesso = false, ErrorMessage = "Erro ao limpar banco de dados"};
-            }
+                _contexto.AgendamentoServico.RemoveRange(_contexto.AgendamentoServico);
+                _contexto.AgendamentoHorario.RemoveRange(_contexto.AgendamentoHorario);
+                _contexto.BarbeiroHorarioExcecao.RemoveRange(_contexto.BarbeiroHorarioExcecao);
+                _contexto.BarbeiroServico.RemoveRange(_contexto.BarbeiroServico);
+                _contexto.SaveChanges();
+                _contexto.Agendamento.RemoveRange(_contexto.Agendamento);
+                _contexto.BarbeiroHorario.RemoveRange(_contexto.BarbeiroHorario);
+                _contexto.SaveChanges();
+                _contexto.Servico.RemoveRange(_contexto.Servico);
+                _contexto.CategoriaServico.RemoveRange(_contexto.CategoriaServico);
+                _contexto.SaveChanges();
+                _contexto.Barbeiro.RemoveRange(_contexto.Barbeiro);
+                _contexto.SaveChanges();
+            }, "Erro ao limpar banco de dados.");
         }
     }
 }
