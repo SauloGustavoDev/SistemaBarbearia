@@ -67,7 +67,6 @@ namespace Api.Aplicacao.Servicos
                 return new GenericResponse { Sucesso = false, ErrorMessage = $"A categoria com ID {request.Categoria} não foi encontrada." };
 
             servicoAtual.DtFim = DateTime.UtcNow;
-            _contexto.Servico.Update(servicoAtual);
 
             var novoServico = new Servico
             {
@@ -77,10 +76,10 @@ namespace Api.Aplicacao.Servicos
                 DtInicio = DateTime.UtcNow,
                 IdCategoriaServico = request.Categoria
             };
-            _contexto.Servico.Add(novoServico);
 
             return MontarGenericResponse.TryExecute(() =>
             {
+                _contexto.Servico.Add(novoServico);
                 _contexto.SaveChanges();
             }, "Ocorreu um erro inesperado ao atualizar o serviço.");
         }

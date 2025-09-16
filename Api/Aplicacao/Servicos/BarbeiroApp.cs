@@ -61,7 +61,6 @@ namespace Api.Aplicacao.Servicos
 
             return MontarGenericResponse.TryExecute(() =>
             {
-                _contexto.Barbeiro.Update(barbeiro);
                 _contexto.SaveChanges();
             }, "Falha ao cadastrar barbeiro.");
         }
@@ -77,7 +76,6 @@ namespace Api.Aplicacao.Servicos
 
             return MontarGenericResponse.TryExecute(() =>
             {
-                _contexto.Barbeiro.Update(barbeiro);
                 _contexto.SaveChanges();
             }, "Falha ao remover barbeiro.");
         }
