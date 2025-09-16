@@ -38,6 +38,8 @@ namespace Api.Aplicacao.Servicos
             if (erros.Any())
                 return new GenericResponse { Sucesso = false, ErrorMessage = string.Join(" ", erros) };
 
+            request.Senha = Criptografia.GerarSenha(request.Senha);
+
             return MontarGenericResponse.TryExecute(() =>
             {
                 _contexto.Add(new Barbeiro(request));

@@ -7,6 +7,7 @@ using Api.Modelos.Response;
 using Api.Models.Entity;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Mail;
+using System.Security.Cryptography;
 
 namespace Api.Aplicacao.Servicos
 {
@@ -30,11 +31,10 @@ namespace Api.Aplicacao.Servicos
             if (barbeiro == null)
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Barbeiro não encontrado" };
 
-            barbeiro.Senha = novaSenha; // ⚠️ de preferência a senha deve estar hasheada
+            barbeiro.Senha = Criptografia.GerarSenha(novaSenha); // ⚠️ de preferência a senha deve estar hasheada
 
             return MontarGenericResponse.TryExecute(() =>
             {
-                _contexto.Update(barbeiro);
                 _contexto.SaveChanges();
             }, "Falha ao atualizar a senha");
         }
@@ -64,12 +64,16 @@ namespace Api.Aplicacao.Servicos
         {
             var barbeiro = _contexto.Set<Barbeiro>()
                             .AsNoTracking()
-                            .FirstOrDefault(x => x.Numero == login.Numero && x.Senha == login.Senha);
+                            .FirstOrDefault(x => x.Numero == login.Numero);
+
 
             if (barbeiro == null)
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Usuário ou senha incorretos" };
 
-            return new GenericResponse { Sucesso = true, Token = _token.CreateToken(barbeiro) };
+            if (Criptografia.VerificarSenha(login.Senha, barbeiro.Senha))
+                return new GenericResponse { Sucesso = true, Token = _token.CreateToken(barbeiro) };
+            else
+                return new GenericResponse { Sucesso = false, ErrorMessage = "Usuário ou senha incorretos" };
         }
     }
 }

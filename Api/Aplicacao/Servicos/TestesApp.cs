@@ -27,9 +27,9 @@ namespace Api.Aplicacao.Servicos
                 var emailsBarbeirosExistentes = _contexto.Barbeiro.Select(b => b.Email).ToHashSet();
                 var barbeirosParaAdicionar = new List<BarbeiroCriarRequest>
                 {
-                new BarbeiroCriarRequest{ Nome = "Carlos Almeida",Numero = "11987654321",Email = "carlos.almeida@barbearia.dev",Acesso = Acesso.Barbeiro, Descricao = "Especialista em cortes clássicos e barba. Na casa há 5 anos.",Senha = "senha_forte_123" },
-                new BarbeiroCriarRequest{Nome = "Bruno Santos",Numero = "21912345678",Email = "bruno.santos@barbearia.dev",Acesso = Acesso.Barbeiro,Descricao = "Foco em cortes modernos, degradê e navalhado. Sempre antenado nas novas tendências.",Senha = "senha_forte_123"},
-                new BarbeiroCriarRequest{Nome = "Ricardo Lima",Numero = "31955558888",Email = "ricardo.lima@barbearia.dev",Acesso = Acesso.Admin, Descricao = "Gerente e barbeiro mais experiente. Mestre em todas as técnicas de corte e barba.",Senha = "senha_forte_123"}
+                new BarbeiroCriarRequest{ Nome = "Carlos Almeida",Numero = "11987654321",Email = "carlos.almeida@barbearia.dev",Acesso = Acesso.Barbeiro, Descricao = "Especialista em cortes clássicos e barba. Na casa há 5 anos.",Senha = Criptografia.GerarSenha("senha_forte_123") },
+                new BarbeiroCriarRequest{Nome = "Bruno Santos",Numero = "21912345678",Email = "bruno.santos@barbearia.dev",Acesso = Acesso.Barbeiro,Descricao = "Foco em cortes modernos, degradê e navalhado. Sempre antenado nas novas tendências.",Senha = Criptografia.GerarSenha("senha_forte_123")},
+                new BarbeiroCriarRequest{Nome = "Ricardo Lima",Numero = "31955558888",Email = "ricardo.lima@barbearia.dev",Acesso = Acesso.Admin, Descricao = "Gerente e barbeiro mais experiente. Mestre em todas as técnicas de corte e barba.",Senha = Criptografia.GerarSenha("senha_forte_123")}
                 }
                 .Where(req => !emailsBarbeirosExistentes.Contains(req.Email)) // Filtra apenas os que não existem
                 .Select(req => new Barbeiro(req)) // Converte para a entidade
