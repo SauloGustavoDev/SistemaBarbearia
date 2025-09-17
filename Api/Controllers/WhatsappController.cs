@@ -22,7 +22,7 @@ namespace Api.Controllers
             if (mode == "subscribe" && token == verifyToken)
             {
                 Console.WriteLine("WEBHOOK VERIFICADO");
-                return Ok(challenge); // devolve o challenge para a Meta
+                return Content(challenge, "text/plain"); // CORRETO: texto puro
             }
 
             return Forbid();
