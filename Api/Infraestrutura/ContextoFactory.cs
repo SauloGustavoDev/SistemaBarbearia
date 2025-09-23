@@ -3,25 +3,15 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace Api.Infraestrutura.Contexto
 {
-    public class SqlContextoFactory : IDesignTimeDbContextFactory<Contexto>
+    public class SqlContextoFactory(IConfiguration configuration) : IDesignTimeDbContextFactory<Contexto>
     {
         public Contexto CreateDbContext(string[] args)
         {
-            IConfigurationRoot configuration = new ConfigurationBuilder()
-                       // Define o caminho base para o diretório do projeto
-                       .SetBasePath(Directory.GetCurrentDirectory())
-                       // Adiciona o arquivo de configuração principal
-                       .AddJsonFile("appsettings.json")
-                       // Adiciona o arquivo de desenvolvimento (que pode sobrescrever o principal)
-                       .AddJsonFile("appsettings.Development.json", optional: true)
-                       .Build();
-
             var optionsBuilder = new DbContextOptionsBuilder<Contexto>();
-
-
-            // 🔹 Use PostgreSQL em vez de SQLite
-            optionsBuilder.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
-
+            string? connection = configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+            if (string.IsNullOrEmpty(connection))
+                throw new InvalidOperationException("Connection:conexão não está configurada.");
+            optionsBuilder.UseNpgsql(connection);
             return new Contexto(optionsBuilder.Options);
         }
 
