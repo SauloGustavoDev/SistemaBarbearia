@@ -1,6 +1,5 @@
 ﻿using Api.Aplicacao.Contratos;
 using Api.Aplicacao.Helpers;
-using Api.Infraestrutura;
 using Api.Infraestrutura.Contexto;
 using Api.Modelos.Entidades;
 using Api.Modelos.Enums;
@@ -10,26 +9,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Api.Aplicacao.Servicos
 {
-    public class AgendamentoApp : IAgendamentoApp
+    public class AgendamentoApp(Contexto contexto) : IAgendamentoApp
     {
-        public readonly Contexto _contexto;
-        public AgendamentoApp(Contexto contexto)
-        {
-            _contexto = contexto;
-        }
+        public readonly Contexto _contexto = contexto;
 
-        public GenericResponse CriarAgendamento(AgendamentoCriarRequest request)
+        public async Task<GenericResponse> CriarAgendamento(AgendamentoCriarRequest request)
         {
             request.DtAgendamento = request.DtAgendamento.ToUniversalTime();
 
-            var horariosOcupados = _contexto.AgendamentoHorario
+            var horariosOcupados = await _contexto.AgendamentoHorario
                 .Include(ah => ah.Agendamento)
-                .Where(ah => ah.Agendamento.DtAgendamento.Date == request.DtAgendamento.Date &&
+                .Where(ah => ah.Agendamento!.DtAgendamento.Date == request.DtAgendamento.Date &&
                              ah.Agendamento.IdBarbeiro == request.IdBarbeiro &&
                              request.IdsHorario.Contains(ah.IdBarbeiroHorario))
-                .ToList();
+                .ToListAsync();
 
-            if (horariosOcupados.Any())
+            if (horariosOcupados.Count != 0)
             {
                 var idsOcupados = string.Join(", ", horariosOcupados.Select(h => h.IdBarbeiroHorario));
                 return new GenericResponse { Sucesso = false, ErrorMessage = $"Os seguintes horários já estão ocupados: {idsOcupados}." };
@@ -39,78 +34,76 @@ namespace Api.Aplicacao.Servicos
 
 
 
-            return MontarGenericResponse.TryExecute(() =>
+            return await MontarGenericResponse.TryExecuteAsync(async () =>
             {
-                _contexto.Agendamento.Add(novoAgendamento);
-                _contexto.SaveChanges();
+                await _contexto.Agendamento.AddAsync(novoAgendamento);
+                await _contexto.SaveChangesAsync();
             }, "Ocorreu um erro inesperado ao criar o agendamento.");
 
         }
-        public List<AgendamentoResponse> ListarAgendamentos(int idBarbeiro, int idServico, string nomeCliente, DateTime? dtInicio, DateTime? dtFim, int status)
+        public async Task<ResultadoPaginado<AgendamentosDetalheResponse>> ListarAgendamentos(AgendamentoListarRequest request)
         {
-            dtInicio = dtInicio.HasValue ? dtInicio : DateTime.Now.Date.ToUniversalTime();
-            dtFim = dtFim.HasValue ? dtFim : DateTime.Now.Date.ToUniversalTime();
+            request.DtInicio = request.DtInicio.HasValue ? request.DtInicio : DateTime.Now.Date.ToUniversalTime();
+            request.DtFim = request.DtFim.HasValue ? request.DtFim : DateTime.Now.Date.ToUniversalTime();
 
 
-            var agendamentos = _contexto.Agendamento
+            var query = _contexto.Agendamento
                                   .AsNoTracking()
-                                  .Where(x => x.IdBarbeiro == idBarbeiro &&
-                                              x.DtAgendamento.Date.ToUniversalTime() >= dtInicio.Value.Date.ToUniversalTime() &&
-                                              x.DtAgendamento.Date.ToUniversalTime() <= dtFim.Value.Date.ToUniversalTime() &&
-                                              (nomeCliente == null || x.NomeCliente.ToUpper().Contains(nomeCliente.ToUpper())) &&
-                                              (status == 0 || (int)x.Status == status) &&
-                                              (idServico == 0 || x.AgendamentoServicos.Any(j => j.IdServico == idServico)))
+                                  .Where(x => x.IdBarbeiro == request.IdBarbeiro &&
+                                              x.DtAgendamento.Date.ToUniversalTime() >= request.DtInicio.Value.Date.ToUniversalTime() &&
+                                              x.DtAgendamento.Date.ToUniversalTime() <= request.DtFim.Value.Date.ToUniversalTime() &&
+                                              (request.NomeCliente == null || x.NomeCliente.Contains(request.NomeCliente, StringComparison.CurrentCultureIgnoreCase)) &&
+                                              (request.Status == null || x.Status == request.Status) &&
+                                              (request.IdServico == 0 || x.AgendamentoServicos.Any(j => j.IdServico == request.IdServico)))
                                   .Include(x => x.AgendamentoHorarios)
                                   .ThenInclude(x => x.BarbeiroHorario)
                                   .Include(x => x.AgendamentoServicos)
                                   .ThenInclude(x => x.Servico)
                                   .OrderByDescending(x => x.DtAgendamento)
-                                  .GroupBy(x => x.DtAgendamento.Date)
-                                  .ToList();
+                                  .Select(x => new AgendamentosDetalheResponse(x))
+                                  .AsQueryable();
 
-            var agendamentosResult = agendamentos
-                .Select(g => new AgendamentoResponse(g.ToList(), g.Key))
-                .ToList();
-
-            return agendamentosResult;
-
+            return await Paginacao.CriarPaginacao(query, request.Pagina, request.ItensPorPagina);
         }
 
-        public List<BarbeiroHorarioResponse> HorariosBarbeiro(BarbeiroHorarioRequest request)
+        public async Task<List<BarbeiroHorarioResponse>> HorariosBarbeiro(BarbeiroHorarioRequest request)
         {
             var hoje = DateTime.Today;
-            var diasParaGerar = 7 - DateTime.Now.DayOfWeek + 7; // semana atual + próxima semana
-            var datasParaConsulta = Enumerable.Range(0, (int)diasParaGerar)
+            var diasParaGerar = 7 - (int)DateTime.Now.DayOfWeek + 7; // semana atual + próxima semana
+            var datasParaConsulta = Enumerable.Range(0, diasParaGerar)
                                               .Select(i => hoje.AddDays(i).Date.ToUniversalTime())
                                               .Where(d => d.DayOfWeek != DayOfWeek.Sunday)
                                               .ToList();
 
-            var horariosPadraoAtivos = _contexto.BarbeiroHorario
+            var horariosPadraoAtivos = await _contexto.BarbeiroHorario
                 .AsNoTracking()
                 .Include(h => h.BarbeiroHorarioExcecao)
                 .Where(h => h.IdBarbeiro == request.IdBarbeiro && h.DtFim == null)
-                .ToList();
+                .ToListAsync();
 
-            var horariosOcupados = _contexto.Agendamento
+            var horariosOcupados = await _contexto.Agendamento
                 .AsNoTracking()
                 .Where(a => a.IdBarbeiro == request.IdBarbeiro && !datasParaConsulta.Contains(a.DtAgendamento.Date.ToUniversalTime()))
                 .SelectMany(a => a.AgendamentoHorarios)
                 .Include(x => x.Agendamento)
-                .ToList();
+                .ToListAsync();
 
             var respostaFinal = new List<BarbeiroHorarioResponse>();
 
             foreach (var data in datasParaConsulta)
             {
                 var horariosDoDia = horariosPadraoAtivos
-                    .Where(h => h.TipoDia == (TipoDia)ValidaUtilOuSabado(data)).OrderBy(x => x.Hora).ToList();
+                    .Where(h => h.TipoDia == (TipoDia)ValidaUtilOuSabado(data))
+                    .OrderBy(x => x.Hora)
+                    .ToList();
 
                 var horariosDisponiveis = new List<HorarioResponse>();
 
                 foreach (var horario in horariosDoDia)
                 {
                     bool temExcecao = horario.BarbeiroHorarioExcecao?.DtExcecao.Date.ToUniversalTime() == data.Date.ToUniversalTime();
-                    bool estaOcupado = horariosOcupados.Any(x => x.Agendamento.DtAgendamento.Date.ToUniversalTime() == data.Date.ToUniversalTime() && x.IdBarbeiroHorario == horario.Id);
+                    bool estaOcupado = horariosOcupados.Any(x => x.Agendamento!.DtAgendamento.Date.ToUniversalTime() == data.Date.ToUniversalTime()
+                                                                 && x.IdBarbeiroHorario == horario.Id);
 
                     if (!temExcecao && !estaOcupado)
                     {
@@ -122,10 +115,10 @@ namespace Api.Aplicacao.Servicos
                     }
                 }
 
-                var servicosSelecionados = _contexto.Servico
+                var servicosSelecionados = await _contexto.Servico
                                 .AsNoTracking()
                                 .Where(x => request.IdsServico.Contains(x.Id))
-                                .ToList();
+                                .ToListAsync();
 
                 var duracaoTotalServicos = TimeSpan.Zero;
 
@@ -138,7 +131,7 @@ namespace Api.Aplicacao.Servicos
 
                 if (slotsNecessarios <= 1)
                 {
-                    if (horariosDisponiveis.Any())
+                    if (horariosDisponiveis.Count != 0)
                     {
                         respostaFinal.Add(new BarbeiroHorarioResponse
                         {
@@ -181,7 +174,7 @@ namespace Api.Aplicacao.Servicos
                     }
                 }
 
-                if (horariosDeInicioValidos.Any())
+                if (horariosDeInicioValidos.Count != 0)
                 {
                     respostaFinal.Add(new BarbeiroHorarioResponse
                     {
@@ -193,19 +186,19 @@ namespace Api.Aplicacao.Servicos
 
             return respostaFinal
                 .OrderBy(x => x.Data)
-                .ThenBy(x => x.Horarios.FirstOrDefault()?.Hora)
+                .ThenBy(x => x.Horarios?.FirstOrDefault()?.Hora)
                 .ToList();
         }
 
-        private int ValidaUtilOuSabado(DateTime data)
+        private static int ValidaUtilOuSabado(DateTime data)
         {
             return (data.DayOfWeek == DayOfWeek.Saturday) ? 2 : 1;
         }
 
-        public GenericResponse CompletarAgendamento(AgendamentoCompletarRequest request)
+        public async Task<GenericResponse> CompletarAgendamento(AgendamentoCompletarRequest request)
         {
-            var agendamento = _contexto.Agendamento
-                   .FirstOrDefault(a => a.Id == request.IdAgendamento);
+            var agendamento = await _contexto.Agendamento
+                   .FirstOrDefaultAsync(a => a.Id == request.IdAgendamento);
 
             if (agendamento == null)
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Falha ao atualizar agendamento" };
@@ -213,33 +206,33 @@ namespace Api.Aplicacao.Servicos
             agendamento.MetodoPagamento = request.MetodoPagamento;
             agendamento.Status = Status.Concluido;
 
-            return MontarGenericResponse.TryExecute(() =>
+            return await MontarGenericResponse.TryExecuteAsync(async () =>
             {
-                _contexto.SaveChanges();
+                await _contexto.SaveChangesAsync();
             }, "Falha ao completar o agendamento.");
         }
 
-        public GenericResponse CancelarAgendamento(int id)
+        public async Task<GenericResponse> CancelarAgendamento(int id)
         {
-            var agendamento = _contexto.Agendamento
-                   .FirstOrDefault(a => a.Id == id);
+            var agendamento = await _contexto.Agendamento
+                   .FirstOrDefaultAsync(a => a.Id == id);
 
             if (agendamento == null)
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Falha ao cancelar agendamento" };
 
             agendamento.Status = Status.CanceladoPeloBarbeiro;
 
-            return MontarGenericResponse.TryExecute(() =>
+            return await MontarGenericResponse.TryExecuteAsync(async () =>
             {
-                _contexto.SaveChanges();
+                await _contexto.SaveChangesAsync();
             }, "Falha ao cancelar agendamento.");
         }
 
-        public GenericResponse AtualizarAgendamento(AgendamentoAtualizarRequest agendamento)
+        public async Task<GenericResponse> AtualizarAgendamento(AgendamentoAtualizarRequest agendamento)
         {
-            var agendamentoExistente = _contexto.Agendamento
+            var agendamentoExistente = await _contexto.Agendamento
                 .Include(a => a.AgendamentoServicos)
-                .FirstOrDefault(a => a.Id == agendamento.Id);
+                .FirstOrDefaultAsync(a => a.Id == agendamento.Id);
 
             if (agendamentoExistente == null)
             {
@@ -249,15 +242,15 @@ namespace Api.Aplicacao.Servicos
             agendamentoExistente.MetodoPagamento = agendamento.MetodoPagamento;
             _contexto.AgendamentoServico.RemoveRange(agendamentoExistente.AgendamentoServicos);
             agendamentoExistente.AgendamentoServicos = agendamento.IdsServico.Select(x => new AgendamentoServico { IdAgendamento = agendamento.Id, IdServico = x }).ToList();
-            return MontarGenericResponse.TryExecute(() =>
+            return await MontarGenericResponse.TryExecuteAsync(async () =>
             {
-                _contexto.SaveChanges();
+                await _contexto.SaveChangesAsync();
             }, "Falha ao atualizar agendamento");
         }
 
-        public AgendamentoAtualResponse AgendamentoAtual(int idBarbeiro)
+        public async Task<AgendamentoAtualResponse> AgendamentoAtual(int idBarbeiro)
         {
-            var agendamento = _contexto.Agendamento
+            var agendamento = await _contexto.Agendamento
                              .AsNoTracking()
                              .Where(a => a.IdBarbeiro == idBarbeiro &&
                              (a.Status == Status.Pendente || a.Status == Status.Confirmado))
@@ -268,13 +261,9 @@ namespace Api.Aplicacao.Servicos
                              .ThenInclude(a => a.Servico)
                              .OrderBy(a => a.DtAgendamento)
                             .ThenBy(a => a.AgendamentoHorarios
-                                .Select(ah => ah.BarbeiroHorario.Hora)
+                                .Select(ah => ah.BarbeiroHorario!.Hora)
                                 .FirstOrDefault())
-                            .FirstOrDefault();
-
-            if (agendamento == null)
-                throw new Exception("Nenhum horário agendado");
-
+                            .FirstOrDefaultAsync() ?? throw new Exception("Nenhum horário agendado");
             var agendamentoAtual = new AgendamentoAtualResponse(agendamento);
 
             return agendamentoAtual;

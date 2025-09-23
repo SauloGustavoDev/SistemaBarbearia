@@ -7,7 +7,7 @@
         public int IdBarbeiroHorario { get; set; }
 
         // Navegações opcionais
-        public Agendamento Agendamento { get; set; }
-        public BarbeiroHorario BarbeiroHorario { get; set; }
+        public Agendamento? Agendamento { get; set; }
+        public BarbeiroHorario? BarbeiroHorario { get; set; }
     }
 }

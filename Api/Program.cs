@@ -60,6 +60,9 @@ builder.Services.AddScoped<IServicoApp, ServicoApp>();
 builder.Services.AddScoped<ITestesApp, TestesApp>();
 builder.Services.AddSingleton<TokenProvider>();
 
+var jwtSecret = builder.Configuration.GetSection("Jwt:Secret").Value
+        ?? throw new InvalidOperationException("Jwt:Secret não está configurado.");
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(x => {
         x.RequireHttpsMetadata = false;
@@ -69,7 +72,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         ValidateAudience = true,
         ValidateIssuerSigningKey = true,
         ValidateLifetime = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetSection("Jwt:Secret").Value)),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
         ValidIssuer = builder.Configuration.GetSection("Jwt:Issuer").Value,
         ValidAudience = builder.Configuration.GetSection("Jwt:Audience").Value,
         ClockSkew = TimeSpan.Zero
@@ -82,7 +85,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("MinhaPoliticaCors", policy =>
     {
-        policy.WithOrigins(allowedOrigins ?? Array.Empty<string>())
+        policy.WithOrigins(allowedOrigins ?? [])
               .AllowAnyMethod()
               .AllowAnyHeader();
     });

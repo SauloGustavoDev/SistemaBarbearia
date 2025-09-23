@@ -5,9 +5,9 @@ namespace Api.Modelos.Request
     public class BarbeiroEditarRequest
     {
         public int Id { get; set; }
-        public string Nome { get; set; }
-        public string Email { get; set; }
-        public string Numero { get; set; }
-        public string Descricao { get; set; }
+        public required string Nome { get; set; }
+        public required string Email { get; set; }
+        public required string Numero { get; set; }
+        public required string Descricao { get; set; }
     }
 }

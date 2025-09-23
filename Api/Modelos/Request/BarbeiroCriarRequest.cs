@@ -4,12 +4,12 @@ namespace Api.Modelos.Dtos
 {
     public class BarbeiroCriarRequest
     {
-        public string Nome { get; set; }
-        public string Numero { get; set; }
-        public string Email { get; set; }
+        public required string Nome { get; set; }
+        public required string Numero { get; set; }
+        public required string Email { get; set; }
         public Acesso Acesso { get; set; }
-        public string Descricao { get; set; }
-        public string Senha { get; set; }
+        public required string Descricao { get; set; }
+        public required string Senha { get; set; }
         
     }
 }

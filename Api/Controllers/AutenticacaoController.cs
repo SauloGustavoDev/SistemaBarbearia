@@ -1,50 +1,45 @@
 ﻿using Api.Aplicacao.Contratos;
-using Api.Modelos.Dtos;
 using Api.Modelos.Request;
-using Api.Models.Entity;
+using Api.Modelos.Response;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AutenticacaoController : GsSystemControllerBase
+    public class AutenticacaoController(IAutenticacaoApp app) : GsSystemControllerBase
     {
-        public readonly IAutenticacaoApp _app;
+        public readonly IAutenticacaoApp _app = app;
 
-        public AutenticacaoController(IAutenticacaoApp app)
-        {
-            _app = app;
-        }
         [HttpPost("Login")]
-        public IActionResult Login([FromBody] BarbeiroLoginRequest login)
+        public ActionResult<string> Login([FromBody] BarbeiroLoginRequest login)
         {
             var result = _app.Login(login);
 
             if (!result.Sucesso)
                 return Unauthorized(new { message = result.ErrorMessage });
 
-            return Ok(new { result.Token });
+            return result.Token!;
 
         }
 
         [HttpPost("EsqueceuSenha")]
-        public IActionResult EsqueceuSenha([FromBody] BarbeiroEsqueceSenhaRequest request)
+        public async Task<ActionResult<GenericResponse>> EsqueceuSenha([FromBody] BarbeiroEsqueceSenhaRequest request)
         {
-            var result = _app.EsqueceuSenha(request);
+            var result =await _app.EsqueceuSenha(request);
 
             if (!result.Sucesso)
                 return Unauthorized(new { message = result.ErrorMessage });
 
-            return Ok();
+            return result;
 
         }
 
         [HttpPatch("NovaSenha")]
-        public IActionResult EditarSenhaBarbeiro(string novaSenha)
+        public async Task<ActionResult<GenericResponse>> EditarSenhaBarbeiro(string novaSenha)
         {
-            _app.AtualizarSenha(GetUserId(),novaSenha);
-            return Ok();
+            var result = await _app.AtualizarSenha(GetUserId(),novaSenha);
+            return result;
         }
 
     }

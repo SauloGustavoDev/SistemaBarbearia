@@ -2,7 +2,7 @@
 {
     public class BarbeiroEsqueceSenhaRequest
     {
-        public string Numero { get; set; }
-        public string Email { get; set; }
+        public required string Numero { get; set; }
+        public required string Email { get; set; }
     }
 }

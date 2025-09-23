@@ -1,16 +1,16 @@
 ﻿using Api.Modelos.Dtos;
+using Api.Modelos.Paginacao;
 using Api.Modelos.Request;
 using Api.Modelos.Response;
-using Api.Models.Entity;
 
 namespace Api.Aplicacao.Contratos
 {
     public interface IBarbeiroApp
     {
-        GenericResponse Cadastrar(BarbeiroCriarRequest request);
-        GenericResponse Editar(BarbeiroEditarRequest request);
-        GenericResponse Excluir(int id);
-        BarbeiroDetalhesResponse BarbeiroDetalhes(int id);
-        List<BarbeiroDetalhesResponse> ListaBarbeiros();
+        Task<GenericResponse> Cadastrar(BarbeiroCriarRequest request);
+        Task<GenericResponse> Editar(BarbeiroEditarRequest request);
+        Task<GenericResponse> Excluir(int id);
+        Task<BarbeiroDetalhesResponse> BarbeiroDetalhes(int id);
+        Task<ResultadoPaginado<BarbeiroDetalhesResponse>> ListaBarbeiros(PaginacaoFiltro request);
     }
 }

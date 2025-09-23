@@ -1,4 +1,5 @@
 ﻿using Api.Aplicacao.Contratos;
+using Api.Modelos.Response;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
@@ -14,17 +15,17 @@ namespace Api.Controllers
             _app = app;
         }
         [HttpGet("GerarBancoSimulado")]
-        public IActionResult GerarBancoSimulado()
+        public async Task<ActionResult<GenericResponse>> GerarBancoSimulado()
         {
-            var data = _app.GerarBancoSimulado();
-            return Ok(data);
+            var data = await _app.GerarBancoSimulado();
+            return data;
         }
 
         [HttpGet("LimpaBancoSimulado")]
-        public IActionResult LimpaBancoSimulado()
+        public async Task<ActionResult<GenericResponse>> LimpaBancoSimulado()
         {
-            var data = _app.LimparBancoDeDados();
-            return Ok(data);
+            var data = await _app.LimparBancoDeDados();
+            return data;
         }
     }
 }

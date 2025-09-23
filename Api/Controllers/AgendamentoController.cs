@@ -1,7 +1,9 @@
 ﻿using Api.Aplicacao.Contratos;
 using Api.Modelos.Entidades;
 using Api.Modelos.Request;
+using Api.Modelos.Response;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace Api.Controllers
 {
@@ -15,50 +17,50 @@ namespace Api.Controllers
             _app = app;
         }
         [HttpPost("HorariosBarbeiros")]
-        public IActionResult HorariosBarbeiro([FromBody] BarbeiroHorarioRequest request)
+        public async Task<ActionResult<List<BarbeiroHorarioResponse>>> HorariosBarbeiro([FromBody] BarbeiroHorarioRequest request)
         {
-            var data = _app.HorariosBarbeiro(request);
+            var data = await _app.HorariosBarbeiro(request);
             return Ok(data);
         }
         [HttpPost("Agendamento")]
-        public IActionResult GerarAgendamento([FromBody] AgendamentoCriarRequest request)
+        public async Task<ActionResult<GenericResponse>> GerarAgendamento([FromBody] AgendamentoCriarRequest request)
         {
-            var data = _app.CriarAgendamento(request);
-            return Ok(data);
+            var data = await _app.CriarAgendamento(request);
+            return data;
         }
         [HttpGet("AgendamentoAtual")]
-        public IActionResult AgendamentoAtual()
+        public async Task<ActionResult<AgendamentoAtualResponse>> AgendamentoAtual()
         {
-            var data = _app.AgendamentoAtual(GetUserId());
-            return Ok(data);
+            var data =await _app.AgendamentoAtual(GetUserId());
+            return data;
         }
 
         [HttpPut("Agendamento")]
-        public IActionResult AtualizarAgendamento([FromBody] AgendamentoAtualizarRequest agendamento)
+        public async Task<ActionResult<GenericResponse>> AtualizarAgendamento([FromBody] AgendamentoAtualizarRequest agendamento)
         {
-            var data = _app.AtualizarAgendamento(agendamento);
-            return Ok(data);
+            var data =await _app.AtualizarAgendamento(agendamento);
+            return data;
         }
 
         [HttpGet("Agendamentos")]
-        public IActionResult ListarAgendamentos([FromHeader] int idBarbeiro, [FromHeader]int idServico, [FromQuery] string nomeCliente,  [FromQuery] DateTime? dtInicio, [FromQuery] DateTime? dtFim, int status)
+        public async Task<ActionResult<ResultadoPaginado<AgendamentosDetalheResponse>>> ListarAgendamentos([FromQuery] AgendamentoListarRequest request)
         {
-            idBarbeiro = idBarbeiro == 0 ? GetUserId() : idBarbeiro;
-            var data = _app.ListarAgendamentos(idBarbeiro,idServico,nomeCliente, dtInicio, dtFim, status);
-            return Ok(data);
+            request.IdBarbeiro = request.IdBarbeiro == 0 ? GetUserId() : request.IdBarbeiro;
+            var data = await _app.ListarAgendamentos(request);
+            return data;
         }
 
         [HttpPatch("CompletarAgendamento")]
-        public IActionResult CompletarAgendamento([FromBody]AgendamentoCompletarRequest request)
+        public async Task<ActionResult<GenericResponse>> CompletarAgendamento([FromBody]AgendamentoCompletarRequest request)
         {
-            var data = _app.CompletarAgendamento(request);
-            return Ok(data);
+            var data = await _app.CompletarAgendamento(request);
+            return data;
         }
         [HttpDelete("Agendamento")]
-        public IActionResult CancelarAgendamento([FromHeader]int id)
+        public async Task<ActionResult<GenericResponse>> CancelarAgendamento([FromHeader]int id)
         {
-            var data = _app.CancelarAgendamento(id);
-            return Ok(data);
+            var data = await _app.CancelarAgendamento(id);
+            return data;
         }
 
     }

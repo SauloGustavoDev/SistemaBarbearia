@@ -5,123 +5,121 @@ using Api.Modelos.Dtos;
 using Api.Modelos.Entidades;
 using Api.Modelos.Enums;
 using Api.Modelos.Response;
-using Api.Models.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Aplicacao.Servicos
 {
-    public class TestesApp : ITestesApp
+    public class TestesApp(Contexto contexto) : ITestesApp
     {
-        public readonly Contexto _contexto;
-        public TestesApp(Contexto contexto)
-        {
-            _contexto = contexto;
-        }
+        public readonly Contexto _contexto = contexto;
 
-        public GenericResponse GerarBancoSimulado()
+        public async Task<GenericResponse> GerarBancoSimulado()
         {
             // Envolvemos tudo em uma transação para garantir que ou tudo é salvo, ou nada é.
-            using var transaction = _contexto.Database.BeginTransaction();
+            await using var transaction = await _contexto.Database.BeginTransactionAsync();
             try
             {
                 // --- 1. SEED DE BARBEIROS (com verificação de existência) ---
-                var emailsBarbeirosExistentes = _contexto.Barbeiro.Select(b => b.Email).ToHashSet();
+                var emailsBarbeirosExistentes = await _contexto.Barbeiro
+                    .Select(b => b.Email)
+                    .ToHashSetAsync();
+
                 var barbeirosParaAdicionar = new List<BarbeiroCriarRequest>
-                {
-                new BarbeiroCriarRequest{ Nome = "Carlos Almeida",Numero = "11987654321",Email = "carlos.almeida@barbearia.dev",Acesso = Acesso.Barbeiro, Descricao = "Especialista em cortes clássicos e barba. Na casa há 5 anos.",Senha = Criptografia.GerarSenha("senha_forte_123") },
-                new BarbeiroCriarRequest{Nome = "Bruno Santos",Numero = "21912345678",Email = "bruno.santos@barbearia.dev",Acesso = Acesso.Barbeiro,Descricao = "Foco em cortes modernos, degradê e navalhado. Sempre antenado nas novas tendências.",Senha = Criptografia.GerarSenha("senha_forte_123")},
-                new BarbeiroCriarRequest{Nome = "Ricardo Lima",Numero = "31955558888",Email = "ricardo.lima@barbearia.dev",Acesso = Acesso.Admin, Descricao = "Gerente e barbeiro mais experiente. Mestre em todas as técnicas de corte e barba.",Senha = Criptografia.GerarSenha("senha_forte_123")}
-                }
-                .Where(req => !emailsBarbeirosExistentes.Contains(req.Email)) // Filtra apenas os que não existem
-                .Select(req => new Barbeiro(req)) // Converte para a entidade
+        {
+            new() { Nome = "Carlos Almeida", Numero = "11987654321", Email = "carlos.almeida@barbearia.dev", Acesso = Acesso.Barbeiro, Descricao = "Especialista em cortes clássicos e barba. Na casa há 5 anos.", Senha = Criptografia.GerarSenha("senha_forte_123") },
+            new() { Nome = "Bruno Santos", Numero = "21912345678", Email = "bruno.santos@barbearia.dev", Acesso = Acesso.Barbeiro, Descricao = "Foco em cortes modernos, degradê e navalhado. Sempre antenado nas novas tendências.", Senha = Criptografia.GerarSenha("senha_forte_123") },
+            new() { Nome = "Ricardo Lima", Numero = "31955558888", Email = "ricardo.lima@barbearia.dev", Acesso = Acesso.Admin, Descricao = "Gerente e barbeiro mais experiente. Mestre em todas as técnicas de corte e barba.", Senha = Criptografia.GerarSenha("senha_forte_123") }
+        }
+                .Where(req => !emailsBarbeirosExistentes.Contains(req.Email))
+                .Select(req => new Barbeiro(req))
                 .ToList();
 
-                if (barbeirosParaAdicionar.Any())
-                {
-                    _contexto.Barbeiro.AddRange(barbeirosParaAdicionar);
-                }
+                if (barbeirosParaAdicionar.Count != 0)
+                    await _contexto.Barbeiro.AddRangeAsync(barbeirosParaAdicionar);
 
                 // --- 2. SEED DE CATEGORIAS (com verificação de existência) ---
-                var nomesCategoriasExistentes = _contexto.CategoriaServico.Select(c => c.Descricao).ToHashSet();
+                var nomesCategoriasExistentes = await _contexto.CategoriaServico
+                    .Select(c => c.Descricao)
+                    .ToHashSetAsync();
+
                 var categoriasParaAdicionar = new List<CategoriaServico>
         {
-            new CategoriaServico { Descricao = "Cabelo" }, // Usando 'Nome' para consistência
-            new CategoriaServico { Descricao = "Barba" },
-            new CategoriaServico { Descricao = "Bigode" },
-            new CategoriaServico { Descricao = "Sobrancelha" }
+            new() { Descricao = "Cabelo" },
+            new() { Descricao = "Barba" },
+            new() { Descricao = "Bigode" },
+            new() { Descricao = "Sobrancelha" }
         }
                 .Where(cat => !nomesCategoriasExistentes.Contains(cat.Descricao))
                 .ToList();
 
-                if (categoriasParaAdicionar.Any())
-                {
-                    _contexto.CategoriaServico.AddRange(categoriasParaAdicionar);
-                }
+                if (categoriasParaAdicionar.Count != 0)
+                    await _contexto.CategoriaServico.AddRangeAsync(categoriasParaAdicionar);
 
-                // --- IMPORTANTE: Salva barbeiros e categorias para que seus IDs sejam gerados pelo banco ---
-                _contexto.SaveChanges();
+                // --- Salva barbeiros e categorias para gerar IDs ---
+                await _contexto.SaveChangesAsync();
 
-                // --- 3. SEED DE SERVIÇOS (com verificação e obtenção de IDs corretos) ---
-                // Busca todas as categorias (as antigas + as novas) para ter um mapa de Nome -> ID.
-                var todasAsCategorias = _contexto.CategoriaServico.ToDictionary(c => c.Descricao, c => c.Id);
-                var nomesServicosExistentes = _contexto.Servico.Select(s => s.Descricao).ToHashSet();
+                // --- 3. SEED DE SERVIÇOS ---
+                var todasAsCategorias = await _contexto.CategoriaServico
+                .Where(c => c.Descricao != null)
+                .ToDictionaryAsync(c => c.Descricao!, c => c.Id);
+
+                var nomesServicosExistentes = await _contexto.Servico
+                    .Select(s => s.Descricao)
+                    .ToHashSetAsync();
 
                 var servicosParaAdicionar = new List<Servico>
         {
-            new Servico { Descricao = "Degrade", Valor = 35, TempoEstimado = new TimeOnly(0, 40, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
-            new Servico { Descricao = "Social", Valor = 35, TempoEstimado = new TimeOnly(0, 40, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
-            new Servico { Descricao = "Navalhado", Valor = 40, TempoEstimado = new TimeOnly(0, 40, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
-            new Servico { Descricao = "Shaver", Valor = 40, TempoEstimado = new TimeOnly(0, 40, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
-            new Servico { Descricao = "Luzes", Valor = 150, TempoEstimado = new TimeOnly(1, 0, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
-            new Servico { Descricao = "Platinado", Valor = 150, TempoEstimado = new TimeOnly(1, 0, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
-            new Servico { Descricao = "Progressiva", Valor = 120, TempoEstimado = new TimeOnly(1, 0, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
-            new Servico { Descricao = "Hidratação", Valor = 25, TempoEstimado = new TimeOnly(0, 40, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
-            new Servico { Descricao = "Alisamento", Valor = 30, TempoEstimado = new TimeOnly(0, 40, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
-            new Servico { Descricao = "Penteado", Valor = 20, TempoEstimado = new TimeOnly(0, 40, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
-            new Servico { Descricao = "Sobrancelha", Valor = 15, TempoEstimado = new TimeOnly(0, 10, 0), IdCategoriaServico = todasAsCategorias["Sobrancelha"] }, // Corrigido o valor e tempo
-            new Servico { Descricao = "Barba", Valor = 30, TempoEstimado = new TimeOnly(0, 40, 0), IdCategoriaServico = todasAsCategorias["Barba"] }
+            new() { Descricao = "Degrade", Valor = 35, TempoEstimado = new TimeOnly(0, 40, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
+            new() { Descricao = "Social", Valor = 35, TempoEstimado = new TimeOnly(0, 40, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
+            new() { Descricao = "Navalhado", Valor = 40, TempoEstimado = new TimeOnly(0, 40, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
+            new() { Descricao = "Shaver", Valor = 40, TempoEstimado = new TimeOnly(0, 40, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
+            new() { Descricao = "Luzes", Valor = 150, TempoEstimado = new TimeOnly(1, 0, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
+            new() { Descricao = "Platinado", Valor = 150, TempoEstimado = new TimeOnly(1, 0, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
+            new() { Descricao = "Progressiva", Valor = 120, TempoEstimado = new TimeOnly(1, 0, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
+            new() { Descricao = "Hidratação", Valor = 25, TempoEstimado = new TimeOnly(0, 40, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
+            new() { Descricao = "Alisamento", Valor = 30, TempoEstimado = new TimeOnly(0, 40, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
+            new() { Descricao = "Penteado", Valor = 20, TempoEstimado = new TimeOnly(0, 40, 0), IdCategoriaServico = todasAsCategorias["Cabelo"] },
+            new() { Descricao = "Sobrancelha", Valor = 15, TempoEstimado = new TimeOnly(0, 10, 0), IdCategoriaServico = todasAsCategorias["Sobrancelha"] },
+            new() { Descricao = "Barba", Valor = 30, TempoEstimado = new TimeOnly(0, 40, 0), IdCategoriaServico = todasAsCategorias["Barba"] }
         }
                 .Where(s => !nomesServicosExistentes.Contains(s.Descricao))
                 .ToList();
 
-                // Adiciona a data de início apenas para os novos serviços
                 servicosParaAdicionar.ForEach(s => s.DtInicio = DateTime.UtcNow);
 
-                if (servicosParaAdicionar.Any())
-                {
-                    _contexto.Servico.AddRange(servicosParaAdicionar);
-                    _contexto.SaveChanges(); // Salva os serviços
-                }
+                if (servicosParaAdicionar.Count != 0)
+                    await _contexto.Servico.AddRangeAsync(servicosParaAdicionar);
 
-                transaction.Commit(); // Confirma todas as operações
+                await _contexto.SaveChangesAsync();
+
+                await transaction.CommitAsync();
                 return new GenericResponse { Sucesso = true };
             }
             catch (Exception ex)
             {
-                transaction.Rollback(); // Desfaz tudo em caso de erro
-                                        // Logar a exceção 'ex' aqui
+                await transaction.RollbackAsync();
                 return new GenericResponse { Sucesso = false, ErrorMessage = $"Ocorreu um erro inesperado: {ex.Message}" };
             }
         }
 
 
-        public GenericResponse LimparBancoDeDados()
+        public async Task<GenericResponse> LimparBancoDeDados()
         {
-
-            return MontarGenericResponse.TryExecute(() =>
+            return await MontarGenericResponse.TryExecuteAsync(async () =>
             {
                 _contexto.AgendamentoServico.RemoveRange(_contexto.AgendamentoServico);
                 _contexto.AgendamentoHorario.RemoveRange(_contexto.AgendamentoHorario);
                 _contexto.BarbeiroHorarioExcecao.RemoveRange(_contexto.BarbeiroHorarioExcecao);
                 _contexto.BarbeiroServico.RemoveRange(_contexto.BarbeiroServico);
-                _contexto.SaveChanges();
+                await _contexto.SaveChangesAsync();
                 _contexto.Agendamento.RemoveRange(_contexto.Agendamento);
                 _contexto.BarbeiroHorario.RemoveRange(_contexto.BarbeiroHorario);
-                _contexto.SaveChanges();
+                await _contexto.SaveChangesAsync();
                 _contexto.Servico.RemoveRange(_contexto.Servico);
                 _contexto.CategoriaServico.RemoveRange(_contexto.CategoriaServico);
-                _contexto.SaveChanges();
+                await _contexto.SaveChangesAsync();
                 _contexto.Barbeiro.RemoveRange(_contexto.Barbeiro);
-                _contexto.SaveChanges();
+                await _contexto.SaveChangesAsync();
             }, "Erro ao limpar banco de dados.");
         }
     }

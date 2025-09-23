@@ -4,7 +4,7 @@ namespace Api.Aplicacao.Contratos
 {
     public interface ITestesApp
     {
-        GenericResponse GerarBancoSimulado();
-        GenericResponse LimparBancoDeDados();
+        Task<GenericResponse> GerarBancoSimulado();
+        Task<GenericResponse> LimparBancoDeDados();
     }
 }

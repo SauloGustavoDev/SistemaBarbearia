@@ -11,6 +11,6 @@ namespace Api.Modelos.Entidades
         public DateTime? DtFim { get; set; }
         // 🟢 Adicionar a propriedade da chave estrangeira
         public int IdBarbeiro { get; set; }
-        public BarbeiroHorarioExcecao BarbeiroHorarioExcecao { get; set; }
+        public BarbeiroHorarioExcecao? BarbeiroHorarioExcecao { get; set; }
     }
 }

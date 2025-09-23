@@ -1,16 +1,17 @@
-﻿using Api.Modelos.Request;
+﻿using Api.Modelos.Paginacao;
+using Api.Modelos.Request;
 using Api.Modelos.Response;
 
 namespace Api.Aplicacao.Contratos
 {
     public interface IServicoApp
     {
-        List<ServicosDetalhesResponse> ListarServicosBarbeiro(int idBarbeiro);
-        GenericResponse EditarServicosBarbeiro(ServicoBarbeiroEditarRequest request);
-        GenericResponse CriarServico(ServicoCriarRequest request);
-        GenericResponse DeletarServico(int id);
-        GenericResponse AtualizarServico(ServicoAtualizarRequest request);
-        List<ServicosDetalhesResponse> ListarServicos();
-        GenericResponse CriarCategoriaServico(string request);
+        Task<ResultadoPaginado<ServicosDetalhesResponse>> ListarServicosBarbeiro(int idBarbeiro, PaginacaoFiltro request);
+        Task<GenericResponse> EditarServicosBarbeiro(ServicoBarbeiroEditarRequest request);
+        Task<GenericResponse> CriarServico(ServicoCriarRequest request);
+        Task<GenericResponse> DeletarServico(int id);
+        Task<GenericResponse> AtualizarServico(ServicoAtualizarRequest request);
+        Task<ResultadoPaginado<ServicosDetalhesResponse>> ListarServicos(PaginacaoFiltro request);
+        Task<GenericResponse> CriarCategoriaServico(string request);
     }
 }

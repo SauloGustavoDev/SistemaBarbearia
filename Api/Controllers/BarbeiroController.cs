@@ -1,54 +1,49 @@
 ﻿using Api.Aplicacao.Contratos;
 using Api.Modelos.Dtos;
+using Api.Modelos.Paginacao;
 using Api.Modelos.Request;
-using Api.Models.Entity;
-using Microsoft.AspNetCore.Authorization;
+using Api.Modelos.Response;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class BarbeiroController : GsSystemControllerBase
+    public class BarbeiroController(IBarbeiroApp app) : GsSystemControllerBase
     {
-        public readonly IBarbeiroApp _app;
-
-        public BarbeiroController(IBarbeiroApp app)
-        {
-            _app = app;
-        }
+        public readonly IBarbeiroApp _app = app;
 
         [HttpPost("Barbeiro")]
-        public IActionResult CriarBarbeiro([FromBody] BarbeiroCriarRequest barbeiro)
+        public async Task<ActionResult<GenericResponse>> CriarBarbeiro([FromBody] BarbeiroCriarRequest barbeiro)
         {
-            var data = _app.Cadastrar(barbeiro);
-            return Ok();
+            var data = await _app.Cadastrar(barbeiro);
+            return data;
         }
         [HttpPut("Barbeiro")]
-        public IActionResult AtualizarBarbeiro(BarbeiroEditarRequest barbeiro)
+        public async Task<ActionResult<GenericResponse>> AtualizarBarbeiro(BarbeiroEditarRequest barbeiro)
         {
-            var data = _app.Editar(barbeiro);
-            return Ok();
+            var data = await _app.Editar(barbeiro);
+            return data;
         }
 
         [HttpDelete("Barbeiro")]
-        public IActionResult ExcluirBarbeiro(int id)
+        public async Task<ActionResult<GenericResponse>> ExcluirBarbeiro(int id)
         {
-            var data = _app.Excluir(id);
-            return Ok();
+            var data = await _app.Excluir(id);
+            return data;
         }
 
         [HttpGet("Barbeiro")]
-        public IActionResult GetBarbeiro()
+        public async Task<ActionResult<BarbeiroDetalhesResponse>> GetBarbeiro()
         {
-            var result = _app.BarbeiroDetalhes(GetUserId());
-            return Ok(result);
+            var data = await _app.BarbeiroDetalhes(GetUserId());
+            return data;
         }
         [HttpGet("Barbeiros")]
-        public IActionResult GetBarbeiros() 
+        public async Task<ActionResult<ResultadoPaginado<BarbeiroDetalhesResponse>>> GetBarbeiros([FromQuery] PaginacaoFiltro request) 
         {
-            var result = _app.ListaBarbeiros();
-            return Ok(result);
+            var data = await _app.ListaBarbeiros(request);
+            return data;
         }
 
     }

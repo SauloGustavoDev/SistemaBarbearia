@@ -14,12 +14,12 @@ namespace Api.Modelos.Response
         public AgendamentoAtualResponse(Agendamento agendamento)
         {
             Id = agendamento.Id;
-            Barbeiro = agendamento.Barbeiro.Nome;
+            Barbeiro = agendamento.Barbeiro!.Nome;
             Cliente = agendamento.NomeCliente;
-            Dt_Agendamento = new DateTime(DateOnly.FromDateTime(agendamento.DtAgendamento), agendamento.AgendamentoHorarios.FirstOrDefault().BarbeiroHorario.Hora);
+            Dt_Agendamento = new DateTime(DateOnly.FromDateTime(agendamento.DtAgendamento), agendamento.AgendamentoHorarios.FirstOrDefault()!.BarbeiroHorario!.Hora);
             Servicos = agendamento.AgendamentoServicos.Select(s => new ServicosDetalhesResponse
             {
-                Id = s.Servico.Id,
+                Id = s.Servico!.Id,
                 Descricao = s.Servico.Descricao,
                 Valor = s.Servico.Valor
             }).ToList();

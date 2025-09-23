@@ -9,6 +9,6 @@ namespace Api.Modelos.Entidades
         public MotivoExcecao MotivoExcecao { get; set; }
 
         public int BarbeiroHorarioId { get; set; }  // FK explícita
-        public BarbeiroHorario BarbeiroHorario { get; set; }
+        public BarbeiroHorario? BarbeiroHorario { get; set; }
     }
 }

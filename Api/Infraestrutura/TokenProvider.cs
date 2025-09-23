@@ -1,4 +1,4 @@
-﻿using Api.Models.Entity;
+﻿using Api.Modelos.Entidades;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -10,7 +10,10 @@ namespace Api.Infraestrutura
     {
         public string CreateToken(Barbeiro barbeiro)
         {
-            string secretKey = configuration.GetSection("Jwt:Secret").Value;
+            string? secretKey = configuration.GetSection("Jwt:Secret").Value;
+            if (string.IsNullOrEmpty(secretKey))
+                throw new InvalidOperationException("Jwt:Secret não está configurado.");
+
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var credential = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var tokenDescriptor = new SecurityTokenDescriptor

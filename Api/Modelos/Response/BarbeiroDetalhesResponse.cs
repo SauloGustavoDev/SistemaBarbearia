@@ -1,6 +1,4 @@
 ﻿using Api.Modelos.Entidades;
-using Api.Modelos.Enums;
-using Api.Models.Entity;
 
 namespace Api.Modelos.Response
 {
@@ -10,9 +8,9 @@ namespace Api.Modelos.Response
         public string Nome { get; set; }
         public string Numero { get; set; }
         public string Email { get; set; }
-        public byte[] Foto { get; set; }
-        public string Descricao { get; set; }
-        public List<ServicosDetalhesResponse> Servicos { get; set; } = new List<ServicosDetalhesResponse>();
+        public byte[]? Foto { get; set; }
+        public string? Descricao { get; set; }
+        public List<ServicosDetalhesResponse> Servicos { get; set; } = [];
 
         public BarbeiroDetalhesResponse(Barbeiro barbeiro)
         {
@@ -22,9 +20,16 @@ namespace Api.Modelos.Response
             Email = barbeiro.Email;
             Foto = barbeiro.Foto;
             Descricao = barbeiro.Descricao;
-            foreach (var item in barbeiro.BarbeiroServicos)
+            if (barbeiro.BarbeiroServicos != null)
             {
-                Servicos.Add(new ServicosDetalhesResponse { Descricao = item.Servico.Descricao.ToString(), Valor = item.Servico.Valor });
+                foreach (var item in barbeiro.BarbeiroServicos)
+                {
+                    Servicos.Add(new ServicosDetalhesResponse
+                    {
+                        Descricao = item.Servico!.Descricao.ToString(),
+                        Valor = item.Servico.Valor
+                    });
+                }
             }
         }
     }

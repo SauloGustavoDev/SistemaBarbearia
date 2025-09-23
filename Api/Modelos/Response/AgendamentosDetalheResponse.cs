@@ -12,14 +12,14 @@ namespace Api.Modelos.Response
     public TimeOnly Horario { get; set; }
     public List<ServicosDetalhesResponse> Servicos { get; set; }
 
-    public AgendamentosDetalheResponse(Agendamento request)
+        public AgendamentosDetalheResponse(Agendamento request)
     {
         Id = request.Id;
         NomeCliente = request.NomeCliente;
         NumeroCliente = request.NumeroCliente;
         Status = request.Status;
-        Horario = request.AgendamentoHorarios.OrderBy(x => x.BarbeiroHorario.Hora).FirstOrDefault().BarbeiroHorario.Hora;
-        Servicos = request.AgendamentoServicos.Select(x => new ServicosDetalhesResponse {Descricao = x.Servico.Descricao}).ToList();
+        Horario = request.AgendamentoHorarios.OrderBy(x => x.BarbeiroHorario!.Hora).FirstOrDefault()!.BarbeiroHorario!.Hora;
+        Servicos = request.AgendamentoServicos.Select(x => new ServicosDetalhesResponse {Descricao = x.Servico!.Descricao}).ToList();
     }
 }
 }

@@ -1,6 +1,4 @@
-﻿using Api.Models.Entity;
-
-namespace Api.Modelos.Entidades
+﻿namespace Api.Modelos.Entidades
 {
     public class BarbeiroServico
     {
@@ -12,7 +10,7 @@ namespace Api.Modelos.Entidades
         public int IdServico { get; set; }
 
         // Propriedades de navegação
-        public Barbeiro Barbeiro { get; set; }
-        public Servico Servico { get; set; }
+        public Barbeiro? Barbeiro { get; set; }
+        public Servico? Servico { get; set; }
     }
 }

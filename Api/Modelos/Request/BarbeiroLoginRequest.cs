@@ -2,7 +2,7 @@
 {
     public class BarbeiroLoginRequest
     {
-        public string Numero { get; set; }
-        public string Senha { get; set; }
+        public required string Numero { get; set; }
+        public required string Senha { get; set; }
     }
 }

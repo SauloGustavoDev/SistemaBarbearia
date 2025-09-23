@@ -4,11 +4,11 @@ namespace Api.Aplicacao.Helpers
 {
     public static class MontarGenericResponse
     {
-        public static GenericResponse TryExecute(Action action, string errorMessage)
+        public static async Task<GenericResponse> TryExecuteAsync(Func<Task> action, string errorMessage)
         {
             try
             {
-                action();
+                await action();
                 return new GenericResponse { Sucesso = true };
             }
             catch
@@ -16,5 +16,6 @@ namespace Api.Aplicacao.Helpers
                 return new GenericResponse { Sucesso = false, ErrorMessage = errorMessage };
             }
         }
+
     }
 }

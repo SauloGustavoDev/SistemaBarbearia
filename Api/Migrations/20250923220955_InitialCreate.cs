@@ -34,16 +34,18 @@ namespace Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CategoriaServico",
+                name: "categoriaservico",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
+                    id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Nome = table.Column<string>(type: "text", nullable: false)
+                    descricao = table.Column<string>(type: "text", nullable: false),
+                    dtinicio = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    dtfim = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CategoriaServico", x => x.Id);
+                    table.PrimaryKey("PK_categoriaservico", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -110,10 +112,10 @@ namespace Api.Migrations
                 {
                     table.PrimaryKey("PK_servico", x => x.id);
                     table.ForeignKey(
-                        name: "FK_servico_CategoriaServico_idcategoriaservico",
+                        name: "FK_servico_categoriaservico_idcategoriaservico",
                         column: x => x.idcategoriaservico,
-                        principalTable: "CategoriaServico",
-                        principalColumn: "Id",
+                        principalTable: "categoriaservico",
+                        principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -291,7 +293,7 @@ namespace Api.Migrations
                 name: "barbeiro");
 
             migrationBuilder.DropTable(
-                name: "CategoriaServico");
+                name: "categoriaservico");
         }
     }
 }

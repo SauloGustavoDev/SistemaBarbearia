@@ -1,5 +1,7 @@
 ﻿using Api.Aplicacao.Contratos;
+using Api.Modelos.Paginacao;
 using Api.Modelos.Request;
+using Api.Modelos.Response;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
@@ -14,49 +16,49 @@ namespace Api.Controllers
             _app = app;
         }
         [HttpGet("Servicos")]
-        public IActionResult ServicosBarbeiro()
+        public async Task<ActionResult<ResultadoPaginado<ServicosDetalhesResponse>>> ServicosBarbeiro([FromQuery] PaginacaoFiltro request)
         {
-            var data = _app.ListarServicos();
-            return Ok(data);
+            var data =await _app.ListarServicos(request);
+            return data;
         }
 
         [HttpGet("ServicosBarbeiro")]
-        public IActionResult ServicosBarbeiro([FromHeader] int idBarbeiro)
+        public async Task<ActionResult<ResultadoPaginado<ServicosDetalhesResponse>>> ServicosBarbeiro([FromHeader] int idBarbeiro, [FromQuery] PaginacaoFiltro request)
         {
             idBarbeiro = idBarbeiro == 0 ? GetUserId() : idBarbeiro;
-            var data = _app.ListarServicosBarbeiro(idBarbeiro);
-            return Ok(data);
+            var data =await _app.ListarServicosBarbeiro(idBarbeiro, request);
+            return data;
         }
         [HttpPatch("ServicosBarbeiro")]
-        public IActionResult ServicosBarbeiro([FromBody] ServicoBarbeiroEditarRequest request)
+        public async Task<ActionResult<GenericResponse>> ServicosBarbeiro([FromBody] ServicoBarbeiroEditarRequest request)
         {
             request.IdBarbeiro = request.IdBarbeiro == 0 ? GetUserId() : request.IdBarbeiro;
-            var data = _app.EditarServicosBarbeiro(request);
-            return Ok(data);
+            var data =await _app.EditarServicosBarbeiro(request);
+            return data;
         }
         [HttpPost("Servico")]
-        public IActionResult CriarServico([FromBody] ServicoCriarRequest request)
+        public async Task<ActionResult<GenericResponse>> CriarServico([FromBody] ServicoCriarRequest request)
         {
-            var data = _app.CriarServico(request);
-            return Ok(data);
+            var data =await _app.CriarServico(request);
+            return data;
         }
         [HttpDelete("Servico")]
-        public IActionResult DeletarServico([FromHeader] int id)
+        public async Task<ActionResult<GenericResponse>> DeletarServico([FromHeader] int id)
         {
-            var data = _app.DeletarServico(id);
-            return Ok(data);
+            var data =await _app.DeletarServico(id);
+            return data;
         }
         [HttpPut("Servico")]
-        public IActionResult AtualizarServico([FromBody] ServicoAtualizarRequest request)
+        public async Task<ActionResult<GenericResponse>> AtualizarServico([FromBody] ServicoAtualizarRequest request)
         {
-            var data = _app.AtualizarServico(request);
-            return Ok(data);
+            var data =await _app.AtualizarServico(request);
+            return data;
         }
         [HttpPost("CategoriaServico")]
-        public IActionResult CriarCategoriaServico([FromBody] string request)
+        public async Task<ActionResult<GenericResponse>> CriarCategoriaServico([FromBody] string request)
         {
-            var data = _app.CriarCategoriaServico(request);
-            return Ok(data);
+            var data =await _app.CriarCategoriaServico(request);
+            return data;
         }
 
     }

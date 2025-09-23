@@ -3,21 +3,18 @@ using Api.Aplicacao.Helpers;
 using Api.Infraestrutura.Contexto;
 using Api.Modelos.Dtos;
 using Api.Modelos.Entidades;
+using Api.Modelos.Paginacao;
 using Api.Modelos.Request;
 using Api.Modelos.Response;
-using Api.Models.Entity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Api.Aplicacao.Servicos
 {
-    public class BarbeiroApp : IBarbeiroApp
+    public class BarbeiroApp(Contexto contexto) : IBarbeiroApp
     {
-        public readonly Contexto _contexto;
-        public BarbeiroApp(Contexto contexto)
-        {
-            _contexto = contexto;
-        }
-        public GenericResponse Cadastrar(BarbeiroCriarRequest request)
+        public readonly Contexto _contexto = contexto;
+
+        public async Task<GenericResponse> Cadastrar(BarbeiroCriarRequest request)
         {
             var erros = new List<string>();
             if (string.IsNullOrWhiteSpace(request.Senha))
@@ -35,22 +32,22 @@ namespace Api.Aplicacao.Servicos
             if (request.Acesso == 0)
                 erros.Add("O acesso é obrigatório");
 
-            if (erros.Any())
+            if (erros.Count != 0)
                 return new GenericResponse { Sucesso = false, ErrorMessage = string.Join(" ", erros) };
 
             request.Senha = Criptografia.GerarSenha(request.Senha);
 
-            return MontarGenericResponse.TryExecute(() =>
+            return await MontarGenericResponse.TryExecuteAsync(async () =>
             {
-                _contexto.Add(new Barbeiro(request));
-                _contexto.SaveChanges();
+                await _contexto.AddAsync(new Barbeiro(request));
+                await _contexto.SaveChangesAsync();
             }, "Falha ao cadastrar barbeiro.");
 
         }
 
-        public GenericResponse Editar(BarbeiroEditarRequest request)
+        public async Task<GenericResponse> Editar(BarbeiroEditarRequest request)
         {
-            var barbeiro = _contexto.Barbeiro.FirstOrDefault(b => b.Id == request.Id);
+            var barbeiro = await _contexto.Barbeiro.FirstOrDefaultAsync(b => b.Id == request.Id);
             if (barbeiro == null)
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Barbeiro não encontrado" };
 
@@ -59,53 +56,49 @@ namespace Api.Aplicacao.Servicos
             barbeiro.Numero = request.Numero;
             barbeiro.Descricao = request.Descricao;
 
-            return MontarGenericResponse.TryExecute(() =>
+            return await MontarGenericResponse.TryExecuteAsync(async() =>
             {
-                _contexto.SaveChanges();
+                await _contexto.SaveChangesAsync();
             }, "Falha ao cadastrar barbeiro.");
         }
 
-        public GenericResponse Excluir(int id)
+        public async Task<GenericResponse> Excluir(int id)
         {
-
-            var barbeiro = _contexto.Barbeiro.FirstOrDefault(b => b.Id == id);
+            var barbeiro = await _contexto.Barbeiro.FirstOrDefaultAsync(b => b.Id == id);
             if (barbeiro == null)
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Barbeiro não encontrado" };
 
             barbeiro.DtDemissao = DateTime.UtcNow;
 
-            return MontarGenericResponse.TryExecute(() =>
+            return await MontarGenericResponse.TryExecuteAsync(async () =>
             {
-                _contexto.SaveChanges();
+                await _contexto.SaveChangesAsync();
             }, "Falha ao remover barbeiro.");
         }
 
-        public BarbeiroDetalhesResponse BarbeiroDetalhes(int id)
+        public async Task<BarbeiroDetalhesResponse> BarbeiroDetalhes(int id)
         {
-            var barbeiro = _contexto.Set<Barbeiro>()
+            var barbeiro = await _contexto.Set<Barbeiro>()
                            .AsNoTracking()
                            .Include(x => x.BarbeiroServicos)
                            .Include(x => x.Agendamentos)
                            .Include(x => x.BarbeiroHorarios)
-                           .FirstOrDefault(x => x.Id == id) ?? throw new Exception("Barbeiro não encontrado");
+                           .FirstOrDefaultAsync(x => x.Id == id) ?? throw new Exception("Barbeiro não encontrado");
 
             return new BarbeiroDetalhesResponse(barbeiro);
         }
 
-        public List<BarbeiroDetalhesResponse> ListaBarbeiros()
+        public async Task<ResultadoPaginado<BarbeiroDetalhesResponse>> ListaBarbeiros(PaginacaoFiltro request)
         {
             var barbeiros = _contexto.Set<Barbeiro>()
                 .AsNoTracking()
                 .Where(x => x.DtDemissao == null)
-                .ToList();
+                .Select(x => new BarbeiroDetalhesResponse(x))
+                .AsQueryable();
 
-            var data = new List<BarbeiroDetalhesResponse>();
-            foreach (var barbeiro in barbeiros)
-            {
-                data.Add(new BarbeiroDetalhesResponse(barbeiro));
-            }
 
-            return data;
+
+            return await Paginacao.CriarPaginacao(barbeiros, request.Pagina, request.ItensPorPagina);
         }
     }
 }

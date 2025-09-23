@@ -2,48 +2,40 @@
 using Api.Aplicacao.Helpers;
 using Api.Infraestrutura;
 using Api.Infraestrutura.Contexto;
+using Api.Modelos.Entidades;
 using Api.Modelos.Request;
 using Api.Modelos.Response;
-using Api.Models.Entity;
 using Microsoft.EntityFrameworkCore;
-using System.Net.Mail;
-using System.Security.Cryptography;
 
 namespace Api.Aplicacao.Servicos
 {
-    public class AutenticacaoApp : IAutenticacaoApp
+    public class AutenticacaoApp(Contexto contexto, INotificacaoApp notificacao, TokenProvider token) : IAutenticacaoApp
     {
-        public readonly Contexto _contexto;
-        private readonly INotificacaoApp _notificacao;
-        private readonly TokenProvider _token;
-        public AutenticacaoApp(Contexto contexto, INotificacaoApp notificacao, TokenProvider token)
-        {
-            _contexto = contexto;
-            _notificacao = notificacao;
-            _token = token;
-        }
+        public readonly Contexto _contexto = contexto;
+        private readonly INotificacaoApp _notificacao = notificacao;
+        private readonly TokenProvider _token = token;
 
-        public GenericResponse AtualizarSenha(int id, string novaSenha)
+        public async Task<GenericResponse> AtualizarSenha(int id, string novaSenha)
         {
-            var barbeiro = _contexto.Set<Barbeiro>()
-                            .FirstOrDefault(b => b.Id == id);
+            var barbeiro = await _contexto.Set<Barbeiro>()
+                            .FirstOrDefaultAsync(b => b.Id == id);
 
             if (barbeiro == null)
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Barbeiro não encontrado" };
 
             barbeiro.Senha = Criptografia.GerarSenha(novaSenha); // ⚠️ de preferência a senha deve estar hasheada
 
-            return MontarGenericResponse.TryExecute(() =>
+            return await MontarGenericResponse.TryExecuteAsync(async () =>
             {
-                _contexto.SaveChanges();
+                await _contexto.SaveChangesAsync();
             }, "Falha ao atualizar a senha");
         }
-        public GenericResponse EsqueceuSenha(BarbeiroEsqueceSenhaRequest request)
+        public async Task<GenericResponse> EsqueceuSenha(BarbeiroEsqueceSenhaRequest request)
         {
-            var barbeiro = _contexto.Set<Barbeiro>()
+            var barbeiro = await _contexto.Set<Barbeiro>()
                             .AsNoTracking()
                             .Where(x => x.Numero == request.Numero && x.Email == request.Email)
-                            .FirstOrDefault();
+                            .FirstOrDefaultAsync();
 
             if (barbeiro == null)
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Numero ou email invalido" };
@@ -51,12 +43,11 @@ namespace Api.Aplicacao.Servicos
             if (barbeiro.Email == null)
                 return new GenericResponse { Sucesso = false, ErrorMessage = "Numero ou email invalido" };
 
-
-
-            return MontarGenericResponse.TryExecute(() =>
+            return await MontarGenericResponse.TryExecuteAsync(async () =>
             {
                 var token = _token.CreateToken(barbeiro);
                 _notificacao.SendEmailNewPassword(barbeiro.Email, token);
+                await Task.CompletedTask;
             }, "Falha ao atualizar a senha");
         }
 

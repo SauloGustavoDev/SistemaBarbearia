@@ -1,17 +1,9 @@
 ﻿using Api.Modelos.Entidades;
-using Api.Modelos.Enums;
-using Api.Models.Entity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using System.ComponentModel;
 namespace Api.Infraestrutura.Contexto
 {
-    public class Contexto : DbContext
+    public class Contexto(DbContextOptions<Contexto> option) : DbContext(option)
     {
-        public Contexto(DbContextOptions<Contexto> option) : base(option)
-        {
-
-        }
         public DbSet<Barbeiro> Barbeiro { get; set; }
         public DbSet<Servico> Servico { get; set; }
         public DbSet<Agendamento> Agendamento { get; set; }
