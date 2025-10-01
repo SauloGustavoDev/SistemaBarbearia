@@ -14,6 +14,5 @@ namespace Api.Infraestrutura.Contexto
             optionsBuilder.UseNpgsql(connection);
             return new Contexto(optionsBuilder.Options);
         }
-
     }
 }

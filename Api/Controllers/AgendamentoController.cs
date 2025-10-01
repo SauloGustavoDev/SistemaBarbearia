@@ -28,6 +28,13 @@ namespace Api.Controllers
             var data = await _app.CriarAgendamento(request);
             return data;
         }
+        [HttpPost("Token")]
+        public async Task<ActionResult> GerarToken([FromBody] string numero)
+        {
+            var data = await _app.GerarToken(numero);
+            return Ok(data);
+        }
+
         [HttpGet("AgendamentoAtual")]
         public async Task<ActionResult<AgendamentoAtualResponse>> AgendamentoAtual()
         {

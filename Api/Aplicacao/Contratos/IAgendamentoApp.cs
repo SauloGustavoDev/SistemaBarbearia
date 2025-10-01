@@ -13,5 +13,6 @@ namespace Api.Aplicacao.Contratos
         Task<GenericResponse> CancelarAgendamento(int id);
         Task<GenericResponse> AtualizarAgendamento(AgendamentoAtualizarRequest agendamento);
         Task<AgendamentoAtualResponse> AgendamentoAtual(int idBarbeiro);
+        Task<GenericResponse> GerarToken(string numero);
     }
 }

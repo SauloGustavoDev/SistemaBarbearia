@@ -8,5 +8,6 @@
         public required List<int> IdsHorario { get; set; }
         public required string Numero { get; set; }
         public required string Nome { get; set; }
+        public required int CodigoConfirmacao { get; set; }
     }
 }

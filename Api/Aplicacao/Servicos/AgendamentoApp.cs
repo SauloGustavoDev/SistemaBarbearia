@@ -13,8 +13,38 @@ namespace Api.Aplicacao.Servicos
     {
         public readonly Contexto _contexto = contexto;
 
+        public async Task<GenericResponse> GerarToken(string numero)
+        {
+            var tokenAtivo = await _contexto.TokenConfirmacao
+                .FirstOrDefaultAsync(t => t.Numero == numero && !t.Confirmado && t.DtExpiracao.ToUniversalTime() > DateTime.UtcNow);
+
+            if (tokenAtivo != null && tokenAtivo.Reenviado)
+                return new GenericResponse { Sucesso = false, ErrorMessage = "O token já foi reenviado." };
+
+            if (tokenAtivo != null && !tokenAtivo.Reenviado)
+            {
+                //enviar token
+                return new GenericResponse { Sucesso = true };
+            }
+
+            var codigo = HelperGenerico.GerarCodigoConfirmacao();
+            var salvarToken = new CodigoConfirmacao(numero, codigo);
+
+            return await MontarGenericResponse.TryExecuteAsync(async () =>
+            {
+                //enviar token
+                await _contexto.TokenConfirmacao.AddAsync(salvarToken);
+                await _contexto.SaveChangesAsync();
+            }, "Ocorreu um erro inesperado na geração do token.");
+        }
         public async Task<GenericResponse> CriarAgendamento(AgendamentoCriarRequest request)
         {
+            var tokenValido = await _contexto.TokenConfirmacao
+                .AnyAsync(t => t.Numero == request.Numero && t.Codigo == request.CodigoConfirmacao && !t.Confirmado && t.DtExpiracao.ToUniversalTime() > DateTime.UtcNow);
+
+            if (!tokenValido)
+                return new GenericResponse { Sucesso = false, ErrorMessage = "Código de confirmação inválido ou expirado." };
+
             request.DtAgendamento = request.DtAgendamento.ToUniversalTime();
 
             var horariosOcupados = await _contexto.AgendamentoHorario
@@ -31,15 +61,11 @@ namespace Api.Aplicacao.Servicos
             }
 
             var novoAgendamento = new Agendamento(request);
-
-
-
             return await MontarGenericResponse.TryExecuteAsync(async () =>
             {
                 await _contexto.Agendamento.AddAsync(novoAgendamento);
                 await _contexto.SaveChangesAsync();
             }, "Ocorreu um erro inesperado ao criar o agendamento.");
-
         }
         public async Task<ResultadoPaginado<AgendamentosDetalheResponse>> ListarAgendamentos(AgendamentoListarRequest request)
         {
@@ -227,7 +253,6 @@ namespace Api.Aplicacao.Servicos
                 await _contexto.SaveChangesAsync();
             }, "Falha ao cancelar agendamento.");
         }
-
         public async Task<GenericResponse> AtualizarAgendamento(AgendamentoAtualizarRequest agendamento)
         {
             var agendamentoExistente = await _contexto.Agendamento
@@ -247,7 +272,6 @@ namespace Api.Aplicacao.Servicos
                 await _contexto.SaveChangesAsync();
             }, "Falha ao atualizar agendamento");
         }
-
         public async Task<AgendamentoAtualResponse> AgendamentoAtual(int idBarbeiro)
         {
             var agendamento = await _contexto.Agendamento

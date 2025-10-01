@@ -20,7 +20,6 @@ namespace Api.Controllers
                 return Unauthorized(new { message = result.ErrorMessage });
 
             return result.Token!;
-
         }
 
         [HttpPost("EsqueceuSenha")]
@@ -32,7 +31,6 @@ namespace Api.Controllers
                 return Unauthorized(new { message = result.ErrorMessage });
 
             return result;
-
         }
 
         [HttpPatch("NovaSenha")]
@@ -41,6 +39,5 @@ namespace Api.Controllers
             var result = await _app.AtualizarSenha(GetUserId(),novaSenha);
             return result;
         }
-
     }
 }

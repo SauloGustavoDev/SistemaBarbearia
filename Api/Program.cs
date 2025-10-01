@@ -2,6 +2,9 @@ using Api.Aplicacao.Contratos;
 using Api.Aplicacao.Servicos;
 using Api.Infraestrutura;
 using Api.Infraestrutura.Contexto;
+using Hangfire;
+using Hangfire.Dashboard;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -10,7 +13,6 @@ using SuaEmpresa.SuaApp.Infraestrutura.Middlewares;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 // Add services to the container.
 builder.Services.AddDbContext<Contexto>(options =>
@@ -21,8 +23,8 @@ builder.Services.AddDbContext<Contexto>(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-
-builder.Services.AddSwaggerGen(o => {
+builder.Services.AddSwaggerGen(o =>
+{
     o.CustomSchemaIds(id => id.FullName!.Replace("+", "-"));
     var securityScheme = new OpenApiSecurityScheme
     {
@@ -64,19 +66,20 @@ var jwtSecret = builder.Configuration.GetSection("Jwt:Secret").Value
         ?? throw new InvalidOperationException("Jwt:Secret não está configurado.");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(x => {
-        x.RequireHttpsMetadata = false;
-    x.TokenValidationParameters = new TokenValidationParameters
+    .AddJwtBearer(x =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateIssuerSigningKey = true,
-        ValidateLifetime = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
-        ValidIssuer = builder.Configuration.GetSection("Jwt:Issuer").Value,
-        ValidAudience = builder.Configuration.GetSection("Jwt:Audience").Value,
-        ClockSkew = TimeSpan.Zero
-    };
+        x.RequireHttpsMetadata = false;
+        x.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ValidIssuer = builder.Configuration.GetSection("Jwt:Issuer").Value,
+            ValidAudience = builder.Configuration.GetSection("Jwt:Audience").Value,
+            ClockSkew = TimeSpan.Zero
+        };
     });
 
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
@@ -91,11 +94,33 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Configuração do Hangfire
+builder.Services.AddHangfire(config =>
+{
+    config.UsePostgreSqlStorage(options =>
+    {
+        options.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"));
+    })
+    .UseSimpleAssemblyNameTypeSerializer();
+
+});
+builder.Services.AddHangfireServer();
+
 var app = builder.Build();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseCors("MinhaPoliticaCors");
 
+var hangUser = builder.Configuration.GetSection("Hangfire:Usuario").Value
+    ?? throw new InvalidOperationException("Usuario do hangfire não está configurado.");
 
+var hangPass = builder.Configuration.GetSection("Hangfire:Senha").Value
+        ?? throw new InvalidOperationException("Senha do hangfire não está configurado.");
+
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    DashboardTitle = "Automações",
+    Authorization = [new HangfireAuthorizationFilter(hangUser, hangPass)]
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

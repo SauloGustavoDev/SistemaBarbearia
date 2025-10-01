@@ -41,5 +41,11 @@
             }
             return horarios;
         }
+
+        public static int GerarCodigoConfirmacao()
+        {
+            Random random = new Random();
+            return random.Next(1000, 9999); // Gera um número entre 1000 e 9999
+        }
     }
 }

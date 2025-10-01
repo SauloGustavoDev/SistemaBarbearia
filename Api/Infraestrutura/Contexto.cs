@@ -13,10 +13,23 @@ namespace Api.Infraestrutura.Contexto
         public DbSet<BarbeiroHorarioExcecao> BarbeiroHorarioExcecao { get; set; }
         public DbSet<CategoriaServico> CategoriaServico { get; set; }
         public DbSet<BarbeiroServico> BarbeiroServico { get; set; }
+        public DbSet<CodigoConfirmacao> TokenConfirmacao { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
+            modelBuilder.Entity<CodigoConfirmacao>(entity =>
+            {
+                entity.ToTable("tokenconfirmacao");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Numero).HasColumnName("numero").IsRequired();
+                entity.Property(e => e.Codigo).HasColumnName("codigo").IsRequired();
+                entity.Property(e => e.DtCriacao).HasColumnName("dtcriacao").IsRequired();
+                entity.Property(e => e.DtExpiracao).HasColumnName("dtexpiracao");
+                entity.Property(e => e.Confirmado).HasColumnName("confirmado").IsRequired();
+            });
 
             modelBuilder.Entity<CategoriaServico>(entity =>
             {
