@@ -4,9 +4,10 @@
     {
         Concluido = 1,
         Pendente = 2,
-        CanceladoPeloCliente = 3,
-        CanceladoPeloBarbeiro = 4,
-        Confirmado = 5,
-        VouAtrasar = 6
+        LembreteEnviado = 3,
+        CanceladoPeloCliente = 4,
+        CanceladoPeloBarbeiro = 5,
+        Confirmado = 6,
+        VouAtrasar = 7
     }
 }

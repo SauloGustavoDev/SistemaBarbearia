@@ -2,15 +2,10 @@
 
 namespace Api.Controllers
 {
-    public class WhatsappController : GsSystemControllerBase
+    public class WhatsappController(IConfiguration configuration) : GsSystemControllerBase
     {
-        private readonly IConfiguration _config;
+        private readonly IConfiguration _config = configuration;
 
-        public WhatsappController(IConfiguration configuration)
-        {
-            _config = configuration;
-
-        }
         [HttpGet("endpoint")]
         public IActionResult Verificar(
           [FromQuery(Name = "hub.mode")] string mode,

@@ -1,20 +1,12 @@
-﻿using Hangfire.Annotations;
-using Hangfire.Dashboard;
-using Microsoft.Extensions.Configuration;
+﻿using Hangfire.Dashboard;
 using System.Text;
 
-namespace Api.Infraestrutura
+namespace Api.Infraestrutura.Hangfire
 {
-    public class HangfireAuthorizationFilter : IDashboardAuthorizationFilter
+    public class HangfireAuthorizationFilter(string username, string password) : IDashboardAuthorizationFilter
     {
-        private readonly string _username;
-        private readonly string _password;
-
-        public HangfireAuthorizationFilter(string username, string password)
-        {
-            _username = username;
-            _password = password;
-        }
+        private readonly string _username = username;
+        private readonly string _password = password;
 
         public bool Authorize(DashboardContext context)
         {
@@ -33,7 +25,7 @@ namespace Api.Infraestrutura
                 }
             }
             httpContext.Response.StatusCode = 401;
-            httpContext.Response.Headers["WWW-Authenticate"] = "Basic realm=\"Hangfire Dashboard\"";
+            httpContext.Response.Headers.WWWAuthenticate = "Basic realm=\"Hangfire Dashboard\"";
             return false;
         }
     }

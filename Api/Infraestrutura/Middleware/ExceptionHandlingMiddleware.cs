@@ -4,7 +4,7 @@ using System;
 using System.Net;
 using System.Threading.Tasks;
 
-namespace SuaEmpresa.SuaApp.Infraestrutura.Middlewares
+namespace Api.Infraestrutura.Middleware
 {
     public class ExceptionHandlingMiddleware
     {

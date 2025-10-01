@@ -2,14 +2,14 @@ using Api.Aplicacao.Contratos;
 using Api.Aplicacao.Servicos;
 using Api.Infraestrutura;
 using Api.Infraestrutura.Contexto;
+using Api.Infraestrutura.Hangfire;
+using Api.Infraestrutura.Middleware;
 using Hangfire;
-using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using SuaEmpresa.SuaApp.Infraestrutura.Middlewares;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -60,6 +60,7 @@ builder.Services.AddScoped<IAutenticacaoApp, AutenticacaoApp>();
 builder.Services.AddScoped<INotificacaoApp, NotificacaoApp>();
 builder.Services.AddScoped<IServicoApp, ServicoApp>();
 builder.Services.AddScoped<ITestesApp, TestesApp>();
+builder.Services.AddTransient<IWorker, Worker>();
 builder.Services.AddSingleton<TokenProvider>();
 
 var jwtSecret = builder.Configuration.GetSection("Jwt:Secret").Value
@@ -121,6 +122,8 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
     DashboardTitle = "Automações",
     Authorization = [new HangfireAuthorizationFilter(hangUser, hangPass)]
 });
+
+app.UseHangfireRecurringJobs();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
