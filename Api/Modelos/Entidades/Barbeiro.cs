@@ -15,6 +15,7 @@ namespace Api.Modelos.Entidades
         public Acesso Acesso { get; set; }
         public string Senha { get; set; } = string.Empty;
         public string? Descricao { get; set; }
+        public TipoAgenda Agenda { get; set; }
         public DateTimeOffset DtCadastro { get; set; }
         public DateTime? DtDemissao { get; set; }
         public List<BarbeiroServico>? BarbeiroServicos { get; set; } = [];

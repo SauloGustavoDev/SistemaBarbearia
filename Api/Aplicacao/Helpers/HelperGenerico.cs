@@ -1,4 +1,6 @@
-﻿namespace Api.Aplicacao.Helpers
+﻿using Api.Modelos.Enums;
+
+namespace Api.Aplicacao.Helpers
 {
     public static class HelperGenerico
     {
@@ -46,6 +48,19 @@
         {
             Random random = new Random();
             return random.Next(1000, 9999); // Gera um número entre 1000 e 9999
+        }
+
+        public static int GerarDiasAgenda(TipoAgenda agenda)
+        {
+            switch (agenda) 
+            {
+                case TipoAgenda.Diaria: return 1;
+                case TipoAgenda.Semanal: return 7 - (int)DateTime.Now.DayOfWeek;
+                case TipoAgenda.Quinzenal: return (7 - (int)DateTime.Now.DayOfWeek) + 7;
+                case TipoAgenda.Mensal: return 30;
+                case TipoAgenda.Fechada: return 0;
+                default: throw new NotImplementedException();
+            }
         }
     }
 }

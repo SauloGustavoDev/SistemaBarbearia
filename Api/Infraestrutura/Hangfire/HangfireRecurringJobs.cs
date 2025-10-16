@@ -8,7 +8,7 @@ namespace Api.Infraestrutura.Hangfire
         public static IApplicationBuilder UseHangfireRecurringJobs(this IApplicationBuilder app)
         {
 
-            RecurringJob.AddOrUpdate<IWorker>("enviar-lembretes-agendamento", worker => worker.EnviarLembreteAgendamentos(), "*/40 * * * * 9,20 * * * 1-5");
+            RecurringJob.AddOrUpdate<IWorker>("enviar-lembretes-agendamento", worker => worker.EnviarLembreteAgendamentos(), "");
 
             return app;
         }

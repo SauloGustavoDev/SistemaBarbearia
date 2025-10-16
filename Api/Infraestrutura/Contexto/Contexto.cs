@@ -77,6 +77,8 @@ namespace Api.Infraestrutura.Contexto
                 entity.Property(e => e.Foto).HasColumnName("foto");
                 entity.Property(e => e.Acesso).HasColumnName("acesso")
                 .HasConversion<string>();
+                entity.Property(e => e.Agenda).HasColumnName("tipoagenda")
+                .HasConversion<string>();
                 entity.Property(e => e.Descricao).HasColumnName("descricao");
                 entity.Property(e => e.DtCadastro).HasColumnName("dtcadastro");
                 entity.Property(e => e.DtDemissao).HasColumnName("dtdemissao");

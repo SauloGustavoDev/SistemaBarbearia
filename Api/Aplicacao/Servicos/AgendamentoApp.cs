@@ -18,6 +18,14 @@ namespace Api.Aplicacao.Servicos
             var tokenAtivo = await _contexto.TokenConfirmacao
                 .FirstOrDefaultAsync(t => t.Numero == numero && !t.Confirmado && t.DtExpiracao.ToUniversalTime() > DateTime.UtcNow);
 
+            var ultimoAgendamento = _contexto.Agendamento
+                .Where(x => x.NumeroCliente == numero && x.Status == Status.Concluido)
+                .OrderByDescending(x => x.DtAgendamento)
+                .FirstOrDefault();
+
+            if (ultimoAgendamento != null && ultimoAgendamento.DtAgendamento.AddDays(7) >= DateTime.UtcNow)
+                return new GenericResponse { Sucesso = false, ErrorMessage = "Seu ultimo corte foi a menos de 7 dias" };
+
             if (tokenAtivo != null && tokenAtivo.Reenviado)
                 return new GenericResponse { Sucesso = false, ErrorMessage = "O token já foi reenviado." };
 
@@ -95,7 +103,12 @@ namespace Api.Aplicacao.Servicos
         public async Task<List<BarbeiroHorarioResponse>> HorariosBarbeiro(BarbeiroHorarioRequest request)
         {
             var hoje = DateTime.Today;
-            var diasParaGerar = 7 - (int)DateTime.Now.DayOfWeek + 7; // semana atual + próxima semana
+
+            var agenda = _contexto.Barbeiro
+                .Find(request.IdBarbeiro)!
+                .Agenda;
+
+            var diasParaGerar = HelperGenerico.GerarDiasAgenda(agenda); // semana atual + próxima semana
             var datasParaConsulta = Enumerable.Range(0, diasParaGerar)
                                               .Select(i => hoje.AddDays(i).Date.ToUniversalTime())
                                               .Where(d => d.DayOfWeek != DayOfWeek.Sunday)
