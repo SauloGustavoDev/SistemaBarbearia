@@ -1,6 +1,8 @@
-﻿namespace Api.Aplicacao.Servicos
+﻿using Api.Aplicacao.Contratos;
+
+namespace Api.Aplicacao.Servicos
 {
-    public class RelatorioApp
+    public class RelatorioApp : IRelatorioApp
     {
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Api.Aplicacao.Contratos
 {
-    public class IRelatorioApp
+    public interface IRelatorioApp
     {
     }
 }

@@ -55,6 +55,7 @@ namespace Api.Aplicacao.Servicos
             barbeiro.Email = request.Email;
             barbeiro.Numero = request.Numero;
             barbeiro.Descricao = request.Descricao;
+            barbeiro.Agenda = request.Agenda;
 
             return await MontarGenericResponse.TryExecuteAsync(async() =>
             {

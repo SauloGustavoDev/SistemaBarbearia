@@ -9,5 +9,6 @@ namespace Api.Modelos.Request
         public required string Email { get; set; }
         public required string Numero { get; set; }
         public required string Descricao { get; set; }
+        public TipoAgenda Agenda { get; set; }
     }
 }

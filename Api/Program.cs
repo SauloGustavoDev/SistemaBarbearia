@@ -55,6 +55,7 @@ builder.Services.AddSwaggerGen(o =>
 });
 
 builder.Services.AddScoped<IBarbeiroApp, BarbeiroApp>();
+builder.Services.AddScoped<IRelatorioApp, RelatorioApp>();
 builder.Services.AddScoped<IAgendamentoApp, AgendamentoApp>();
 builder.Services.AddScoped<IAutenticacaoApp, AutenticacaoApp>();
 builder.Services.AddScoped<INotificacaoApp, NotificacaoApp>();
