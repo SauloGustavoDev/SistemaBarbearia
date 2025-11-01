@@ -6,12 +6,12 @@ namespace Api.Aplicacao.Contratos
 {
     public interface IServicoApp
     {
-        Task<ResultadoPaginado<ServicosDetalhesResponse>> ListarServicosBarbeiro(int idBarbeiro, PaginacaoFiltro request);
-        Task<GenericResponse> EditarServicosBarbeiro(ServicoBarbeiroEditarRequest request);
-        Task<GenericResponse> CriarServico(ServicoCriarRequest request);
-        Task<GenericResponse> DeletarServico(int id);
-        Task<GenericResponse> AtualizarServico(ServicoAtualizarRequest request);
-        Task<ResultadoPaginado<ServicosDetalhesResponse>> ListarServicos(PaginacaoFiltro request);
-        Task<GenericResponse> CriarCategoriaServico(string request);
+        ResultadoPaginado<ServicosDetalhesResponse> ListarServicosBarbeiro(int idBarbeiro, PaginacaoFiltro request);
+        void EditarServicosBarbeiro(ServicoBarbeiroEditarRequest request);
+        void CriarServico(ServicoCriarRequest request);
+        void DeletarServico(int id);
+        void AtualizarServico(ServicoAtualizarRequest request);
+        ResultadoPaginado<ServicosDetalhesResponse> ListarServicos(PaginacaoFiltro request);
+        void CriarCategoriaServico(string request);
     }
 }

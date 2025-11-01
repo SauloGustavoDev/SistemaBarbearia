@@ -13,28 +13,24 @@ namespace Api.Aplicacao.Servicos
     {
         public readonly Contexto _contexto = contexto;
 
-        public async Task<GenericResponse> CriarServico(ServicoCriarRequest request)
+        public void CriarServico(ServicoCriarRequest request)
         {
-            var erros = new List<string>();
-
             if (string.IsNullOrWhiteSpace(request.Descricao))
-                erros.Add("A descrição do serviço é obrigatória.");
+                throw new ArgumentException("A descrição do serviço é obrigatória.");
 
             if (request.Valor <= 0)
-                erros.Add("O valor do serviço deve ser maior que zero.");
+                throw new ArgumentException("O valor do serviço deve ser maior que zero.");
 
             if (request.TempoEstimado == 0)
-                erros.Add("O tempo estimado do serviço é obrigatório.");
+                throw new ArgumentException("O tempo estimado do serviço deve ser maior que zero.");
 
             if (request.Categoria <= 0)
-                erros.Add("A categoria do serviço é obrigatória.");
+                throw new ArgumentException("A categoria do serviço é obrigatória.");
 
-            if (erros.Count != 0)
-                return new GenericResponse { Sucesso = false, ErrorMessage = string.Join(" ", erros) };
+            var categoriaExiste = _contexto.CategoriaServico.Any(c => c.Id == request.Categoria);
 
-            var categoriaExiste = await _contexto.CategoriaServico.AnyAsync(c => c.Id == request.Categoria);
             if (!categoriaExiste)
-                return new GenericResponse { Sucesso = false, ErrorMessage = $"A categoria com ID {request.Categoria} não foi encontrada." };
+                throw new ArgumentException($"A categoria com ID {request.Categoria} não foi encontrada.");
 
             var novoServico = new Servico
             {
@@ -44,23 +40,14 @@ namespace Api.Aplicacao.Servicos
                 DtInicio = DateTime.UtcNow,
                 IdCategoriaServico = request.Categoria
             };
-
-            return await MontarGenericResponse.TryExecuteAsync( async () =>
-            {
-                await _contexto.Servico.AddAsync(novoServico);
-                await _contexto.SaveChangesAsync();
-            }, "Ocorreu um erro inesperado ao criar o serviço.");
+            _contexto.Servico.Add(novoServico);
+            _contexto.SaveChanges();
         }
-        public async Task<GenericResponse> AtualizarServico(ServicoAtualizarRequest request)
+        public void AtualizarServico(ServicoAtualizarRequest request)
         {
-            var servicoAtual = await _contexto.Servico.FirstOrDefaultAsync(s => s.Id == request.Id && s.DtFim == null);
+            var servicoAtual = _contexto.Servico.FirstOrDefault(s => s.Id == request.Id && s.DtFim == null) ?? throw new ArgumentException("Serviço ativo com ID {request.Id} não foi encontrado.");
 
-            if (servicoAtual == null)
-                return new GenericResponse { Sucesso = false, ErrorMessage = $"Serviço ativo com ID {request.Id} não foi encontrado." };
-
-            var categoriaExiste = _contexto.CategoriaServico.Any(c => c.Id == request.Categoria);
-            if (!categoriaExiste)
-                return new GenericResponse { Sucesso = false, ErrorMessage = $"A categoria com ID {request.Categoria} não foi encontrada." };
+            var categoriaExiste = _contexto.CategoriaServico.FirstOrDefault(c => c.Id == request.Categoria) ?? throw new ArgumentException($"A categoria com ID {request.Categoria} não foi encontrada.");
 
             servicoAtual.DtFim = DateTime.UtcNow;
 
@@ -68,58 +55,46 @@ namespace Api.Aplicacao.Servicos
             {
                 Descricao = request.Descricao!,
                 Valor = request.Valor,
-                TempoEstimado = new TimeOnly(0,request.TempoEstimado,0),
+                TempoEstimado = new TimeOnly(0, request.TempoEstimado, 0),
                 DtInicio = DateTime.UtcNow,
                 IdCategoriaServico = request.Categoria
             };
 
-            return await MontarGenericResponse.TryExecuteAsync(async () =>
-            {
-                await _contexto.Servico.AddAsync(novoServico);
-                await _contexto.SaveChangesAsync();
-            }, "Ocorreu um erro inesperado ao atualizar o serviço.");
+            _contexto.Servico.Add(novoServico);
+            _contexto.SaveChanges();
         }
 
-        public async Task<GenericResponse> CriarCategoriaServico(string request)
+        public void CriarCategoriaServico(string request)
         {
             var novaCategoria = new CategoriaServico
             {
                 Descricao = request,
                 DtInicio = DateTime.UtcNow
             };
-            return await MontarGenericResponse.TryExecuteAsync(async () =>
-            {
-                await _contexto.CategoriaServico.AddAsync(novaCategoria);
-                await _contexto.SaveChangesAsync();
-            }, "Ocorreu um erro inesperado ao criar a categoria.");
+
+            _contexto.CategoriaServico.Add(novaCategoria);
+            _contexto.SaveChanges();
         }
 
-        public async Task<GenericResponse> DeletarServico(int id)
+        public void DeletarServico(int id)
         {
-                var servicoParaDesativar = await _contexto.Servico.FirstOrDefaultAsync(s => s.Id == id && s.DtFim == null);
-                if (servicoParaDesativar == null)
-                    return new GenericResponse { Sucesso = false, ErrorMessage = $"Serviço ativo com ID {id} não foi encontrado." };
-
-                servicoParaDesativar.DtFim = DateTime.UtcNow;
-            return await MontarGenericResponse.TryExecuteAsync(async () =>
-            {
-                await _contexto.SaveChangesAsync();
-            }, "Ocorreu um erro inesperado ao desativar o serviço.");
+            var servicoParaDesativar = _contexto.Servico.FirstOrDefault(s => s.Id == id && s.DtFim == null) ?? throw new ArgumentException($"Serviço ativo com ID {id} não foi encontrado.");
+            servicoParaDesativar.DtFim = DateTime.UtcNow;
+            _contexto.SaveChanges();
         }
-        public async Task<GenericResponse> EditarServicosBarbeiro(ServicoBarbeiroEditarRequest request)
+        public void EditarServicosBarbeiro(ServicoBarbeiroEditarRequest request)
         {
-            await using var transaction = await _contexto.Database.BeginTransactionAsync();
+            using var transaction = _contexto.Database.BeginTransaction();
             try
             {
-                var barbeiroExiste = await _contexto.Barbeiro.AnyAsync(b => b.Id == request.IdBarbeiro);
+                var barbeiroExiste = _contexto.Barbeiro.Any(b => b.Id == request.IdBarbeiro);
 
                 if (!barbeiroExiste)
-                    return new GenericResponse { Sucesso = false, ErrorMessage = "Barbeiro não encontrado." };
+                    throw new Exception($"Barbeiro com ID {request.IdBarbeiro} não existe.");
 
-
-                var servicosAtuaisAtivos = await _contexto.BarbeiroServico
+                var servicosAtuaisAtivos =  _contexto.BarbeiroServico
                     .Where(bs => bs.IdBarbeiro == request.IdBarbeiro && bs.DtFim == null)
-                    .ToListAsync();
+                    .ToList();
 
                 var idsServicosAtuais = servicosAtuaisAtivos.Select(bs => bs.IdServico).ToList();
                 var idsParaAdicionar = request.IdsServico.Except(idsServicosAtuais).ToList();
@@ -130,16 +105,16 @@ namespace Api.Aplicacao.Servicos
 
                 foreach (var servico in servicosParaDesativar)
                 {
-                    servico.DtFim = DateTime.UtcNow; 
+                    servico.DtFim = DateTime.UtcNow;
                 }
 
                 foreach (var idServico in idsParaAdicionar)
                 {
-                    var servicoExiste = await _contexto.Servico.AnyAsync(s => s.Id == idServico);
+                    var servicoExiste =  _contexto.Servico.Any(s => s.Id == idServico);
                     if (!servicoExiste)
                     {
-                        await transaction.RollbackAsync();
-                        return new GenericResponse { Sucesso = false, ErrorMessage = $"Serviço com ID {idServico} não existe." };
+                        transaction.Rollback();
+                       throw new Exception($"Serviço com ID {idServico} não existe.");
                     }
 
                     var novoServicoBarbeiro = new BarbeiroServico
@@ -149,24 +124,23 @@ namespace Api.Aplicacao.Servicos
                         DtInicio = DateTime.UtcNow,
                         DtFim = null
                     };
-                    await _contexto.BarbeiroServico.AddAsync(novoServicoBarbeiro);
+                     _contexto.BarbeiroServico.Add(novoServicoBarbeiro);
                 }
 
-                await _contexto.SaveChangesAsync();
-                await transaction.CommitAsync();
-                return new GenericResponse { Sucesso = true};
+                 _contexto.SaveChanges();
+                 transaction.Commit();
             }
             catch
             {
-                await transaction.RollbackAsync();
-                return new GenericResponse { Sucesso = false, ErrorMessage = "Ocorreu um erro inesperado ao atualizar os serviços." };
+                transaction.Rollback();
+                throw new Exception("Ocorreu um erro ao editar os serviços do barbeiro.");
             }
         }
 
-        public async Task<ResultadoPaginado<ServicosDetalhesResponse>> ListarServicosBarbeiro(int idBarbeiro, PaginacaoFiltro request)
+        public ResultadoPaginado<ServicosDetalhesResponse> ListarServicosBarbeiro(int idBarbeiro, PaginacaoFiltro request)
         {
             var query = _contexto.BarbeiroServico
-                .Where(s =>  s.IdBarbeiro == idBarbeiro && s.DtFim == null)
+                .Where(s => s.IdBarbeiro == idBarbeiro && s.DtFim == null)
                 .Include(x => x.Servico)
                 .ThenInclude(x => x!.CategoriaServico)
                 .Select(s => new ServicosDetalhesResponse
@@ -178,10 +152,10 @@ namespace Api.Aplicacao.Servicos
                 })
                 .AsQueryable();
 
-            return await Paginacao.CriarPaginacao(query, request.Pagina, request.ItensPorPagina);
+            return Paginacao.CriarPaginacao(query, request.Pagina, request.ItensPorPagina);
         }
 
-        public async Task<ResultadoPaginado<ServicosDetalhesResponse>> ListarServicos(PaginacaoFiltro request)
+        public ResultadoPaginado<ServicosDetalhesResponse> ListarServicos(PaginacaoFiltro request)
         {
             var query = _contexto.Servico
                 .Where(s => s.DtFim == null)
@@ -195,7 +169,7 @@ namespace Api.Aplicacao.Servicos
                 })
                 .AsQueryable();
 
-            return await Paginacao.CriarPaginacao(query, request.Pagina, request.ItensPorPagina);
+            return Paginacao.CriarPaginacao(query, request.Pagina, request.ItensPorPagina);
         }
     }
 }

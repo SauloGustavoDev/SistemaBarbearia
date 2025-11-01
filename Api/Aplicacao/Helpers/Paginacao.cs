@@ -5,14 +5,14 @@ namespace Api.Aplicacao.Helpers
 {
     public static class Paginacao
     {
-        public static async Task<ResultadoPaginado<T>> CriarPaginacao<T>(IQueryable<T> query, int pagina, int itensPorPagina)
+        public static ResultadoPaginado<T> CriarPaginacao<T>(IQueryable<T> query, int pagina, int itensPorPagina)
         {
-            var total = await query
-                .CountAsync();
-            var itens = await query
+            var total = query
+                .Count();
+            var itens = query
                 .Skip((pagina - 1) * itensPorPagina)
                 .Take(itensPorPagina)
-                .ToListAsync();
+                .ToList();
 
             return new ResultadoPaginado<T>
             {

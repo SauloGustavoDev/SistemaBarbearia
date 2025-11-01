@@ -4,8 +4,6 @@ using Api.Infraestrutura.Contexto;
 using Api.Modelos.Dtos;
 using Api.Modelos.Entidades;
 using Api.Modelos.Enums;
-using Api.Modelos.Response;
-using Microsoft.EntityFrameworkCore;
 
 namespace Api.Aplicacao.Servicos
 {
@@ -13,16 +11,16 @@ namespace Api.Aplicacao.Servicos
     {
         public readonly Contexto _contexto = contexto;
 
-        public async Task<GenericResponse> GerarBancoSimulado()
+        public void GerarBancoSimulado()
         {
             // Envolvemos tudo em uma transação para garantir que ou tudo é salvo, ou nada é.
-            await using var transaction = await _contexto.Database.BeginTransactionAsync();
+            using var transaction = _contexto.Database.BeginTransaction();
             try
             {
                 // --- 1. SEED DE BARBEIROS (com verificação de existência) ---
-                var emailsBarbeirosExistentes = await _contexto.Barbeiro
+                var emailsBarbeirosExistentes = _contexto.Barbeiro
                     .Select(b => b.Email)
-                    .ToHashSetAsync();
+                    .ToHashSet();
 
                 var barbeirosParaAdicionar = new List<BarbeiroCriarRequest>
         {
@@ -35,12 +33,12 @@ namespace Api.Aplicacao.Servicos
                 .ToList();
 
                 if (barbeirosParaAdicionar.Count != 0)
-                    await _contexto.Barbeiro.AddRangeAsync(barbeirosParaAdicionar);
+                    _contexto.Barbeiro.AddRange(barbeirosParaAdicionar);
 
                 // --- 2. SEED DE CATEGORIAS (com verificação de existência) ---
-                var nomesCategoriasExistentes = await _contexto.CategoriaServico
+                var nomesCategoriasExistentes = _contexto.CategoriaServico
                     .Select(c => c.Descricao)
-                    .ToHashSetAsync();
+                    .ToHashSet();
 
                 var categoriasParaAdicionar = new List<CategoriaServico>
         {
@@ -53,19 +51,19 @@ namespace Api.Aplicacao.Servicos
                 .ToList();
 
                 if (categoriasParaAdicionar.Count != 0)
-                    await _contexto.CategoriaServico.AddRangeAsync(categoriasParaAdicionar);
+                     _contexto.CategoriaServico.AddRange(categoriasParaAdicionar);
 
                 // --- Salva barbeiros e categorias para gerar IDs ---
-                await _contexto.SaveChangesAsync();
+                 _contexto.SaveChanges();
 
                 // --- 3. SEED DE SERVIÇOS ---
-                var todasAsCategorias = await _contexto.CategoriaServico
+                var todasAsCategorias =  _contexto.CategoriaServico
                 .Where(c => c.Descricao != null)
-                .ToDictionaryAsync(c => c.Descricao!, c => c.Id);
+                .ToDictionary(c => c.Descricao!, c => c.Id);
 
-                var nomesServicosExistentes = await _contexto.Servico
+                var nomesServicosExistentes =  _contexto.Servico
                     .Select(s => s.Descricao)
-                    .ToHashSetAsync();
+                    .ToHashSet();
 
                 var servicosParaAdicionar = new List<Servico>
         {
@@ -88,39 +86,35 @@ namespace Api.Aplicacao.Servicos
                 servicosParaAdicionar.ForEach(s => s.DtInicio = DateTime.UtcNow);
 
                 if (servicosParaAdicionar.Count != 0)
-                    await _contexto.Servico.AddRangeAsync(servicosParaAdicionar);
+                     _contexto.Servico.AddRange(servicosParaAdicionar);
 
-                await _contexto.SaveChangesAsync();
+                 _contexto.SaveChanges();
 
-                await transaction.CommitAsync();
-                return new GenericResponse { Sucesso = true };
+                 transaction.Commit();
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
-                return new GenericResponse { Sucesso = false, ErrorMessage = $"Ocorreu um erro inesperado: {ex.Message}" };
+                 transaction.Rollback();
+                 throw new Exception("Erro ao gerar banco simulado: " + ex.Message);
             }
         }
 
 
-        public async Task<GenericResponse> LimparBancoDeDados()
+        public void LimparBancoDeDados()
         {
-            return await MontarGenericResponse.TryExecuteAsync(async () =>
-            {
                 _contexto.AgendamentoServico.RemoveRange(_contexto.AgendamentoServico);
                 _contexto.AgendamentoHorario.RemoveRange(_contexto.AgendamentoHorario);
                 _contexto.BarbeiroHorarioExcecao.RemoveRange(_contexto.BarbeiroHorarioExcecao);
                 _contexto.BarbeiroServico.RemoveRange(_contexto.BarbeiroServico);
-                await _contexto.SaveChangesAsync();
+                 _contexto.SaveChanges();
                 _contexto.Agendamento.RemoveRange(_contexto.Agendamento);
                 _contexto.BarbeiroHorario.RemoveRange(_contexto.BarbeiroHorario);
-                await _contexto.SaveChangesAsync();
+                 _contexto.SaveChanges();
                 _contexto.Servico.RemoveRange(_contexto.Servico);
                 _contexto.CategoriaServico.RemoveRange(_contexto.CategoriaServico);
-                await _contexto.SaveChangesAsync();
+                 _contexto.SaveChanges();
                 _contexto.Barbeiro.RemoveRange(_contexto.Barbeiro);
-                await _contexto.SaveChangesAsync();
-            }, "Erro ao limpar banco de dados.");
+                 _contexto.SaveChanges();
         }
     }
 }

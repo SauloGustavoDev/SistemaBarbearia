@@ -13,10 +13,10 @@ namespace Api.Aplicacao.Servicos
     {
         public readonly Contexto _contexto = contexto;
 
-        public async Task<GenericResponse> GerarToken(string numero)
+        public void GerarToken(string numero)
         {
-            var tokenAtivo = await _contexto.TokenConfirmacao
-                .FirstOrDefaultAsync(t => t.Numero == numero && !t.Confirmado && t.DtExpiracao.ToUniversalTime() > DateTime.UtcNow);
+            var tokenAtivo =  _contexto.TokenConfirmacao
+                .FirstOrDefault(t => t.Numero == numero && !t.Confirmado && t.DtExpiracao.ToUniversalTime() > DateTime.UtcNow);
 
             var ultimoAgendamento = _contexto.Agendamento
                 .Where(x => x.NumeroCliente == numero && x.Status == Status.Concluido)
@@ -24,58 +24,52 @@ namespace Api.Aplicacao.Servicos
                 .FirstOrDefault();
 
             if (ultimoAgendamento != null && ultimoAgendamento.DtAgendamento.AddDays(7) >= DateTime.UtcNow)
-                return new GenericResponse { Sucesso = false, ErrorMessage = "Seu ultimo corte foi a menos de 7 dias" };
+                throw new Exception("Seu ultimo corte foi a menos de 7 dias");
 
             if (tokenAtivo != null && tokenAtivo.Reenviado)
-                return new GenericResponse { Sucesso = false, ErrorMessage = "O token já foi reenviado." };
+                throw new Exception("Já foi enviado um código de confirmação. Por favor, verifique seu telefone.");
 
             if (tokenAtivo != null && !tokenAtivo.Reenviado)
             {
                 //enviar token
-                return new GenericResponse { Sucesso = true };
+                return;
             }
 
             var codigo = HelperGenerico.GerarCodigoConfirmacao();
             var salvarToken = new CodigoConfirmacao(numero, codigo);
 
-            return await MontarGenericResponse.TryExecuteAsync(async () =>
-            {
-                //enviar token
-                await _contexto.TokenConfirmacao.AddAsync(salvarToken);
-                await _contexto.SaveChangesAsync();
-            }, "Ocorreu um erro inesperado na geração do token.");
+            _contexto.TokenConfirmacao.Add(salvarToken);
+            _contexto.SaveChanges();
+
         }
-        public async Task<GenericResponse> CriarAgendamento(AgendamentoCriarRequest request)
+        public void CriarAgendamento(AgendamentoCriarRequest request)
         {
-            var tokenValido = await _contexto.TokenConfirmacao
-                .AnyAsync(t => t.Numero == request.Numero && t.Codigo == request.CodigoConfirmacao && !t.Confirmado && t.DtExpiracao.ToUniversalTime() > DateTime.UtcNow);
+            var tokenValido =  _contexto.TokenConfirmacao
+                .Any(t => t.Numero == request.Numero && t.Codigo == request.CodigoConfirmacao && !t.Confirmado && t.DtExpiracao.ToUniversalTime() > DateTime.UtcNow);
 
             if (!tokenValido)
-                return new GenericResponse { Sucesso = false, ErrorMessage = "Código de confirmação inválido ou expirado." };
+                throw new Exception("Código de confirmação inválido ou expirado.");
 
             request.DtAgendamento = request.DtAgendamento.ToUniversalTime();
 
-            var horariosOcupados = await _contexto.AgendamentoHorario
+            var horariosOcupados =  _contexto.AgendamentoHorario
                 .Include(ah => ah.Agendamento)
                 .Where(ah => ah.Agendamento!.DtAgendamento.Date == request.DtAgendamento.Date &&
                              ah.Agendamento.IdBarbeiro == request.IdBarbeiro &&
                              request.IdsHorario.Contains(ah.IdBarbeiroHorario))
-                .ToListAsync();
+                .ToList();
 
             if (horariosOcupados.Count != 0)
             {
                 var idsOcupados = string.Join(", ", horariosOcupados.Select(h => h.IdBarbeiroHorario));
-                return new GenericResponse { Sucesso = false, ErrorMessage = $"Os seguintes horários já estão ocupados: {idsOcupados}." };
+                throw new Exception($"Os seguintes horários já estão ocupados: {idsOcupados}");
             }
 
             var novoAgendamento = new Agendamento(request);
-            return await MontarGenericResponse.TryExecuteAsync(async () =>
-            {
-                await _contexto.Agendamento.AddAsync(novoAgendamento);
-                await _contexto.SaveChangesAsync();
-            }, "Ocorreu um erro inesperado ao criar o agendamento.");
+            _contexto.Agendamento.Add(novoAgendamento);
+            _contexto.SaveChanges();
         }
-        public async Task<ResultadoPaginado<AgendamentosDetalheResponse>> ListarAgendamentos(AgendamentoListarRequest request)
+        public ResultadoPaginado<AgendamentosDetalheResponse> ListarAgendamentos(AgendamentoListarRequest request)
         {
             request.DtInicio = request.DtInicio.HasValue ? request.DtInicio : DateTime.Now.Date.ToUniversalTime();
             request.DtFim = request.DtFim.HasValue ? request.DtFim : DateTime.Now.Date.ToUniversalTime();
@@ -97,10 +91,10 @@ namespace Api.Aplicacao.Servicos
                                   .Select(x => new AgendamentosDetalheResponse(x))
                                   .AsQueryable();
 
-            return await Paginacao.CriarPaginacao(query, request.Pagina, request.ItensPorPagina);
+            return Paginacao.CriarPaginacao(query, request.Pagina, request.ItensPorPagina);
         }
 
-        public async Task<List<BarbeiroHorarioResponse>> HorariosBarbeiro(BarbeiroHorarioRequest request)
+        public  List<BarbeiroHorarioResponse> HorariosBarbeiro(BarbeiroHorarioRequest request)
         {
             var hoje = DateTime.Today;
 
@@ -114,18 +108,18 @@ namespace Api.Aplicacao.Servicos
                                               .Where(d => d.DayOfWeek != DayOfWeek.Sunday)
                                               .ToList();
 
-            var horariosPadraoAtivos = await _contexto.BarbeiroHorario
+            var horariosPadraoAtivos =  _contexto.BarbeiroHorario
                 .AsNoTracking()
                 .Include(h => h.BarbeiroHorarioExcecao)
                 .Where(h => h.IdBarbeiro == request.IdBarbeiro && h.DtFim == null)
-                .ToListAsync();
+                .ToList();
 
-            var horariosOcupados = await _contexto.Agendamento
+            var horariosOcupados =  _contexto.Agendamento
                 .AsNoTracking()
                 .Where(a => a.IdBarbeiro == request.IdBarbeiro && !datasParaConsulta.Contains(a.DtAgendamento.Date.ToUniversalTime()))
                 .SelectMany(a => a.AgendamentoHorarios)
                 .Include(x => x.Agendamento)
-                .ToListAsync();
+                .ToList();
 
             var respostaFinal = new List<BarbeiroHorarioResponse>();
 
@@ -154,10 +148,10 @@ namespace Api.Aplicacao.Servicos
                     }
                 }
 
-                var servicosSelecionados = await _contexto.Servico
+                var servicosSelecionados =  _contexto.Servico
                                 .AsNoTracking()
                                 .Where(x => request.IdsServico.Contains(x.Id))
-                                .ToListAsync();
+                                .ToList();
 
                 var duracaoTotalServicos = TimeSpan.Zero;
 
@@ -234,60 +228,39 @@ namespace Api.Aplicacao.Servicos
             return (data.DayOfWeek == DayOfWeek.Saturday) ? 2 : 1;
         }
 
-        public async Task<GenericResponse> CompletarAgendamento(AgendamentoCompletarRequest request)
+        public void CompletarAgendamento(AgendamentoCompletarRequest request)
         {
-            var agendamento = await _contexto.Agendamento
-                   .FirstOrDefaultAsync(a => a.Id == request.IdAgendamento);
-
-            if (agendamento == null)
-                return new GenericResponse { Sucesso = false, ErrorMessage = "Falha ao atualizar agendamento" };
-
+            var agendamento = _contexto.Agendamento.Find(request.IdAgendamento) ?? throw new Exception("Agendamento não encontrado");
             agendamento.MetodoPagamento = request.MetodoPagamento;
             agendamento.Status = Status.Concluido;
-
-            return await MontarGenericResponse.TryExecuteAsync(async () =>
-            {
-                await _contexto.SaveChangesAsync();
-            }, "Falha ao completar o agendamento.");
+            _contexto.SaveChanges();
         }
 
-        public async Task<GenericResponse> CancelarAgendamento(int id)
+        public void CancelarAgendamento(int id)
         {
-            var agendamento = await _contexto.Agendamento
-                   .FirstOrDefaultAsync(a => a.Id == id);
-
-            if (agendamento == null)
-                return new GenericResponse { Sucesso = false, ErrorMessage = "Falha ao cancelar agendamento" };
-
+            var agendamento = _contexto.Agendamento.Find(id) ?? throw new Exception("Agendamento não encontrado");
             agendamento.Status = Status.CanceladoPeloBarbeiro;
-
-            return await MontarGenericResponse.TryExecuteAsync(async () =>
-            {
-                await _contexto.SaveChangesAsync();
-            }, "Falha ao cancelar agendamento.");
+            _contexto.SaveChanges();
         }
-        public async Task<GenericResponse> AtualizarAgendamento(AgendamentoAtualizarRequest agendamento)
+        public void AtualizarAgendamento(AgendamentoAtualizarRequest agendamento)
         {
-            var agendamentoExistente = await _contexto.Agendamento
+            var agendamentoExistente =  _contexto.Agendamento
                 .Include(a => a.AgendamentoServicos)
-                .FirstOrDefaultAsync(a => a.Id == agendamento.Id);
+                .FirstOrDefault(a => a.Id == agendamento.Id);
 
             if (agendamentoExistente == null)
             {
-                return new GenericResponse { Sucesso = false, ErrorMessage = "Agendamento não encontrado." };
+                throw new Exception("Agendamento não encontrado");
             }
 
             agendamentoExistente.MetodoPagamento = agendamento.MetodoPagamento;
             _contexto.AgendamentoServico.RemoveRange(agendamentoExistente.AgendamentoServicos);
             agendamentoExistente.AgendamentoServicos = agendamento.IdsServico.Select(x => new AgendamentoServico { IdAgendamento = agendamento.Id, IdServico = x }).ToList();
-            return await MontarGenericResponse.TryExecuteAsync(async () =>
-            {
-                await _contexto.SaveChangesAsync();
-            }, "Falha ao atualizar agendamento");
+            _contexto.SaveChanges();
         }
-        public async Task<AgendamentoAtualResponse> AgendamentoAtual(int idBarbeiro)
+        public  AgendamentoAtualResponse AgendamentoAtual(int idBarbeiro)
         {
-            var agendamento = await _contexto.Agendamento
+            var agendamento =  _contexto.Agendamento
                              .AsNoTracking()
                              .Where(a => a.IdBarbeiro == idBarbeiro &&
                              (a.Status == Status.Pendente || a.Status == Status.Confirmado))
@@ -300,7 +273,7 @@ namespace Api.Aplicacao.Servicos
                             .ThenBy(a => a.AgendamentoHorarios
                                 .Select(ah => ah.BarbeiroHorario!.Hora)
                                 .FirstOrDefault())
-                            .FirstOrDefaultAsync() ?? throw new Exception("Nenhum horário agendado");
+                            .FirstOrDefault() ?? throw new Exception("Nenhum horário agendado");
             var agendamentoAtual = new AgendamentoAtualResponse(agendamento);
 
             return agendamentoAtual;

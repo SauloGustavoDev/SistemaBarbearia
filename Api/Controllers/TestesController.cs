@@ -15,17 +15,17 @@ namespace Api.Controllers
             _app = app;
         }
         [HttpGet("GerarBancoSimulado")]
-        public async Task<ActionResult<GenericResponse>> GerarBancoSimulado()
+        public ActionResult GerarBancoSimulado()
         {
-            var data = await _app.GerarBancoSimulado();
-            return data;
+            _app.GerarBancoSimulado();
+            return Ok();
         }
 
         [HttpGet("LimpaBancoSimulado")]
-        public async Task<ActionResult<GenericResponse>> LimpaBancoSimulado()
+        public ActionResult LimpaBancoSimulado()
         {
-            var data = await _app.LimparBancoDeDados();
-            return data;
+            _app.LimparBancoDeDados();
+            return Ok();
         }
     }
 }

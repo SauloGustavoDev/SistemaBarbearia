@@ -14,35 +14,35 @@ namespace Api.Controllers
         public readonly IBarbeiroApp _app = app;
 
         [HttpPost("Barbeiro")]
-        public async Task<ActionResult<GenericResponse>> CriarBarbeiro([FromBody] BarbeiroCriarRequest barbeiro)
+        public ActionResult CriarBarbeiro([FromBody] BarbeiroCriarRequest barbeiro)
         {
-            var data = await _app.Cadastrar(barbeiro);
-            return data;
+            _app.Cadastrar(barbeiro);
+            return Ok();
         }
         [HttpPut("Barbeiro")]
-        public async Task<ActionResult<GenericResponse>> AtualizarBarbeiro(BarbeiroEditarRequest barbeiro)
+        public ActionResult AtualizarBarbeiro(BarbeiroEditarRequest barbeiro)
         {
-            var data = await _app.Editar(barbeiro);
-            return data;
+            _app.Editar(barbeiro);
+            return Ok();
         }
 
         [HttpDelete("Barbeiro")]
-        public async Task<ActionResult<GenericResponse>> ExcluirBarbeiro(int id)
+        public ActionResult ExcluirBarbeiro(int id)
         {
-            var data = await _app.Excluir(id);
-            return data;
+            _app.Excluir(id);
+            return Ok();
         }
 
         [HttpGet("Barbeiro")]
-        public async Task<ActionResult<BarbeiroDetalhesResponse>> GetBarbeiro()
+        public ActionResult<BarbeiroDetalhesResponse> GetBarbeiro()
         {
-            var data = await _app.BarbeiroDetalhes(GetUserId());
+            var data = _app.BarbeiroDetalhes(GetUserId());
             return data;
         }
         [HttpGet("Barbeiros")]
-        public async Task<ActionResult<ResultadoPaginado<BarbeiroDetalhesResponse>>> GetBarbeiros([FromQuery] PaginacaoFiltro request) 
+        public ActionResult<ResultadoPaginado<BarbeiroDetalhesResponse>> GetBarbeiros([FromQuery] PaginacaoFiltro request) 
         {
-            var data = await _app.ListaBarbeiros(request);
+            var data = _app.ListaBarbeiros(request);
             return data;
         }
 

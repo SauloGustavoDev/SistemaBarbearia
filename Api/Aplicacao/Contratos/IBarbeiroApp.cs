@@ -7,10 +7,10 @@ namespace Api.Aplicacao.Contratos
 {
     public interface IBarbeiroApp
     {
-        Task<GenericResponse> Cadastrar(BarbeiroCriarRequest request);
-        Task<GenericResponse> Editar(BarbeiroEditarRequest request);
-        Task<GenericResponse> Excluir(int id);
-        Task<BarbeiroDetalhesResponse> BarbeiroDetalhes(int id);
-        Task<ResultadoPaginado<BarbeiroDetalhesResponse>> ListaBarbeiros(PaginacaoFiltro request);
+        void Cadastrar(BarbeiroCriarRequest request);
+        void Editar(BarbeiroEditarRequest request);
+        void Excluir(int id);
+        BarbeiroDetalhesResponse BarbeiroDetalhes(int id);
+        ResultadoPaginado<BarbeiroDetalhesResponse> ListaBarbeiros(PaginacaoFiltro request);
     }
 }

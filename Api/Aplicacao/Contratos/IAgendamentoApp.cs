@@ -6,13 +6,13 @@ namespace Api.Aplicacao.Contratos
 {
     public interface IAgendamentoApp
     {
-        Task<List<BarbeiroHorarioResponse>> HorariosBarbeiro(BarbeiroHorarioRequest request);
-        Task<GenericResponse> CriarAgendamento(AgendamentoCriarRequest request);
-        Task<ResultadoPaginado<AgendamentosDetalheResponse>> ListarAgendamentos(AgendamentoListarRequest request);
-        Task<GenericResponse> CompletarAgendamento(AgendamentoCompletarRequest request);
-        Task<GenericResponse> CancelarAgendamento(int id);
-        Task<GenericResponse> AtualizarAgendamento(AgendamentoAtualizarRequest agendamento);
-        Task<AgendamentoAtualResponse> AgendamentoAtual(int idBarbeiro);
-        Task<GenericResponse> GerarToken(string numero);
+        List<BarbeiroHorarioResponse> HorariosBarbeiro(BarbeiroHorarioRequest request);
+        void CriarAgendamento(AgendamentoCriarRequest request);
+        ResultadoPaginado<AgendamentosDetalheResponse> ListarAgendamentos(AgendamentoListarRequest request);
+        void CompletarAgendamento(AgendamentoCompletarRequest request);
+        void CancelarAgendamento(int id);
+        void AtualizarAgendamento(AgendamentoAtualizarRequest agendamento);
+        AgendamentoAtualResponse AgendamentoAtual(int idBarbeiro);
+        void GerarToken(string numero);
     }
 }

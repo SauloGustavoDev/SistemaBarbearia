@@ -14,30 +14,21 @@ namespace Api.Controllers
         [HttpPost("Login")]
         public ActionResult<string> Login([FromBody] BarbeiroLoginRequest login)
         {
-            var result = _app.Login(login);
-
-            if (!result.Sucesso)
-                return Unauthorized(new { message = result.ErrorMessage });
-
-            return result.Token!;
+            return _app.Login(login);
         }
 
         [HttpPost("EsqueceuSenha")]
-        public async Task<ActionResult<GenericResponse>> EsqueceuSenha([FromBody] BarbeiroEsqueceSenhaRequest request)
+        public ActionResult EsqueceuSenha([FromBody] BarbeiroEsqueceSenhaRequest request)
         {
-            var result =await _app.EsqueceuSenha(request);
-
-            if (!result.Sucesso)
-                return Unauthorized(new { message = result.ErrorMessage });
-
-            return result;
+            _app.EsqueceuSenha(request);
+            return Ok();
         }
 
         [HttpPatch("NovaSenha")]
-        public async Task<ActionResult<GenericResponse>> EditarSenhaBarbeiro(string novaSenha)
+        public ActionResult EditarSenhaBarbeiro(string novaSenha)
         {
-            var result = await _app.AtualizarSenha(GetUserId(),novaSenha);
-            return result;
+            _app.AtualizarSenha(GetUserId(),novaSenha);
+            return Ok();
         }
     }
 }
