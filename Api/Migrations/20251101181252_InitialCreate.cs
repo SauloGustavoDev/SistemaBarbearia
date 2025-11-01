@@ -25,6 +25,7 @@ namespace Api.Migrations
                     acesso = table.Column<string>(type: "text", nullable: false),
                     senha = table.Column<string>(type: "text", nullable: false),
                     descricao = table.Column<string>(type: "text", nullable: true),
+                    tipoagenda = table.Column<string>(type: "text", nullable: false),
                     dtcadastro = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     dtdemissao = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
@@ -46,6 +47,24 @@ namespace Api.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_categoriaservico", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tokenconfirmacao",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    numero = table.Column<string>(type: "text", nullable: false),
+                    codigo = table.Column<int>(type: "integer", nullable: false),
+                    dtcriacao = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    dtexpiracao = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    confirmado = table.Column<bool>(type: "boolean", nullable: false),
+                    Reenviado = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tokenconfirmacao", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -279,6 +298,9 @@ namespace Api.Migrations
 
             migrationBuilder.DropTable(
                 name: "barbeiroservico");
+
+            migrationBuilder.DropTable(
+                name: "tokenconfirmacao");
 
             migrationBuilder.DropTable(
                 name: "agendamento");
