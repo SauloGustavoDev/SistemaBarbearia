@@ -48,6 +48,11 @@ namespace Api.Controllers
             _app.DeletarServico(id);
             return Ok();
         }
+        [HttpGet("Categorias")]
+        public ActionResult<List<CategoriasResponse>> ListarCategorias()
+        {
+            return _app.ListarCategorias();
+        }
         [HttpPut("Servico")]
         public ActionResult AtualizarServico([FromBody] ServicoAtualizarRequest request)
         {

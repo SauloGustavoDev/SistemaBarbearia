@@ -45,7 +45,7 @@ namespace Api.Aplicacao.Servicos
         }
         public void AtualizarServico(ServicoAtualizarRequest request)
         {
-            var servicoAtual = _contexto.Servico.FirstOrDefault(s => s.Id == request.Id && s.DtFim == null) ?? throw new ArgumentException("Serviço ativo com ID {request.Id} não foi encontrado.");
+            var servicoAtual = _contexto.Servico.FirstOrDefault(s => s.Id == request.Id && s.DtFim == null) ?? throw new ArgumentException($"Serviço ativo com ID {request.Id} não foi encontrado.");
 
             var categoriaExiste = _contexto.CategoriaServico.FirstOrDefault(c => c.Id == request.Categoria) ?? throw new ArgumentException($"A categoria com ID {request.Categoria} não foi encontrada.");
 
@@ -165,11 +165,26 @@ namespace Api.Aplicacao.Servicos
                     Id = s.Id,
                     Descricao = s.Descricao,
                     Valor = s.Valor,
+                    TempoEstimado = s.TempoEstimado,
                     Categoria = s.CategoriaServico!.Descricao!
                 })
                 .AsQueryable();
 
             return Paginacao.CriarPaginacao(query, request.Pagina, request.ItensPorPagina);
+        }
+
+        public List<CategoriasResponse> ListarCategorias()
+        {
+            var categorias = _contexto.CategoriaServico
+                .Where(c => c.DtFim == null)
+                .Include(c => c.Servicos)
+                .Select(c => new CategoriasResponse
+                {
+                    Id = c.Id,
+                    Descricao = c.Descricao
+                })
+                .ToList();
+            return categorias;
         }
     }
 }

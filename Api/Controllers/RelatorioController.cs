@@ -9,6 +9,7 @@ namespace Api.Controllers
     public class RelatorioController(IRelatorioApp app) : GsSystemControllerBase
     {
         private readonly IRelatorioApp _app = app;
+        [HttpGet("RelatorioFinanceiro")]
         public ActionResult<RelatorioFinanceiro> RelatorioFinanceiro()
         {
             return Ok();

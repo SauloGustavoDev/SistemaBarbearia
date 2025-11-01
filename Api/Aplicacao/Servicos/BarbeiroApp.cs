@@ -31,10 +31,14 @@ namespace Api.Aplicacao.Servicos
             if (request.Acesso == 0)
                 throw new ArgumentException("O acesso é obrigatório");
 
+            var numeroExiste = _contexto.Barbeiro.Any(b => b.Numero == request.Numero || b.Email == request.Email);
+            if(numeroExiste)
+            throw new Exception("Telefone ou email já cadastrados.");
+
             request.Senha = Criptografia.GerarSenha(request.Senha);
 
-            _contexto.AddAsync(new Barbeiro(request));
-            _contexto.SaveChangesAsync();
+            _contexto.Add(new Barbeiro(request));
+            _contexto.SaveChanges();
 
         }
 

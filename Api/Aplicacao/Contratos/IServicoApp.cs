@@ -13,5 +13,6 @@ namespace Api.Aplicacao.Contratos
         void AtualizarServico(ServicoAtualizarRequest request);
         ResultadoPaginado<ServicosDetalhesResponse> ListarServicos(PaginacaoFiltro request);
         void CriarCategoriaServico(string request);
+        List<CategoriasResponse> ListarCategorias();
     }
 }
