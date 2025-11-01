@@ -10,7 +10,7 @@ namespace Api.Aplicacao.Servicos
         private readonly ILogger<Worker> _logger = logger;
         public readonly Contexto _contexto = contexto;
 
-        public async Task EnviarLembreteAgendamentos()
+        public void EnviarNotificacaoCorte()
         {
             _logger.LogInformation("Worker: Iniciando verificação de lembretes de agendamento.");
 
@@ -21,23 +21,15 @@ namespace Api.Aplicacao.Servicos
 
                 // Busca agendamentos confirmados que estão para acontecer na próxima hora
                 // e que ainda não tiveram lembrete enviado (assumindo uma flag \'LembreteEnviado\' no Agendamento)
-                var agendamento = await _contexto.Agendamento
+                var agendamento =  _contexto.Agendamento
                     .Where(a => a.Status == Status.Pendente &&
-                                a.DtAgendamento.ToUniversalTime() > agora &&
-                                a.DtAgendamento.ToUniversalTime() <= umaHoraDepois)
-                    .FirstOrDefaultAsync();
+                                a.DtAgendamento.ToUniversalTime() == umaHoraDepois)
+                    .FirstOrDefault();
 
                 if (agendamento == null)
                     return; // Nenhum agendamento para lembrar
 
-                var mesmoAgendamentoSeguinte = await _contexto.Agendamento
-                    .Where(a => a.NumeroCliente == agendamento.NumeroCliente &&
-                    a.DtAgendamento.Date.ToUniversalTime() == agora.Date.ToUniversalTime()
-                    && a.Status == Status.Pendente)
-                    .ToListAsync();
 
-                agendamento.Status = Status.LembreteEnviado;
-                mesmoAgendamentoSeguinte.ForEach(x => x.Status = Status.LembreteEnviado);
                 _logger.LogInformation($"Worker: Enviando lembrete de agendamento! Cliente: {agendamento.NomeCliente} - Numero: {agendamento.NumeroCliente}.");
 
                 // Supondo que você tenha o número de telefone do cliente no modelo Agendamento
@@ -49,8 +41,9 @@ namespace Api.Aplicacao.Servicos
                 //    agendamento.DtAgendamento.ToLocalTime().ToString("HH:mm")
                 //);
 
+                agendamento.Status = Status.LembreteEnviado;
 
-                await _contexto.SaveChangesAsync();
+                _contexto.SaveChanges();
                 _logger.LogInformation($"Worker: Lembrete de agendamento enviado.");
             }
             catch (Exception ex)

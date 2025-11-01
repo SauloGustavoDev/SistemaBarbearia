@@ -7,8 +7,12 @@ namespace Api.Infraestrutura.Hangfire
     {
         public static IApplicationBuilder UseHangfireRecurringJobs(this IApplicationBuilder app)
         {
-
-            RecurringJob.AddOrUpdate<IWorker>("enviar-lembretes-agendamento", worker => worker.EnviarLembreteAgendamentos(), "");
+            // Substitui Cron.MinuteInterval(10) por a expressão cron equivalente: "*/10 * * * *"
+            RecurringJob.AddOrUpdate<IWorker>(
+                "enviar-notificacao-corte",
+                worker => worker.EnviarNotificacaoCorte(),
+                "*/10 * * * *"
+            );
 
             return app;
         }

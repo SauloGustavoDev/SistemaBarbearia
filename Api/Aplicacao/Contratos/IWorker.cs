@@ -2,6 +2,6 @@
 {
     public interface IWorker
     {
-        Task EnviarLembreteAgendamentos();
+        void EnviarNotificacaoCorte();
     }
 }
