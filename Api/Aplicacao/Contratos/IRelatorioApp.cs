@@ -1,6 +1,10 @@
-﻿namespace Api.Aplicacao.Contratos
+﻿using Api.Modelos.Request;
+using Api.Modelos.Response;
+
+namespace Api.Aplicacao.Contratos
 {
     public interface IRelatorioApp
     {
+        RelatorioFinanceiro GerarRelatorioFinanceiro(RelatorioFinanceiroRequest request);
     }
 }

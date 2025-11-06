@@ -25,6 +25,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(o =>
 {
+    o.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Api da Barbearia",
+        Version = "v1",
+        Description = "Documentação da API de agendamento e controle da barbearia."
+    });
+
     o.CustomSchemaIds(id => id.FullName!.Replace("+", "-"));
     var securityScheme = new OpenApiSecurityScheme
     {

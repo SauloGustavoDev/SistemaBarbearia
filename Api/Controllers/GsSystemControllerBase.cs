@@ -8,11 +8,7 @@ namespace Api.Controllers
         protected int GetUserId()
         {
             var id = User.Claims?.FirstOrDefault(a => a.Type == "Id")?.Value;
-            id = "1";
-            if (id == null)
-                throw new Exception("Não autorizado");
-
-            return int.Parse(id);
+            return id == null ? throw new Exception("Não autorizado") : int.Parse(id);
         }
         protected string GetUserNumero()
         {
