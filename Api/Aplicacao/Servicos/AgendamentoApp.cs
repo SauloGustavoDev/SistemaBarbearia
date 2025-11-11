@@ -31,7 +31,9 @@ namespace Api.Aplicacao.Servicos
 
             if (tokenAtivo != null && !tokenAtivo.Reenviado)
             {
-                //enviar token
+                HelperGenerico.EnviarMensagem(tokenAtivo.Codigo.ToString(), numero);
+                tokenAtivo.Reenviado = true;
+                _contexto.SaveChanges();
                 return;
             }
 
@@ -40,8 +42,9 @@ namespace Api.Aplicacao.Servicos
 
             _contexto.TokenConfirmacao.Add(salvarToken);
             _contexto.SaveChanges();
-
+            HelperGenerico.EnviarMensagem(codigo.ToString(), numero);
         }
+
         public void CriarAgendamento(AgendamentoCriarRequest request)
         {
             var tokenValido =  _contexto.TokenConfirmacao
