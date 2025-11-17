@@ -48,10 +48,12 @@ namespace Api.Aplicacao.Servicos
         public void CriarAgendamento(AgendamentoCriarRequest request)
         {
             var tokenValido =  _contexto.TokenConfirmacao
-                .Any(t => t.Numero == request.Numero && t.Codigo == request.CodigoConfirmacao && !t.Confirmado && t.DtExpiracao.ToUniversalTime() > DateTime.UtcNow);
+                .FirstOrDefault(t => t.Numero == request.Numero 
+                                    && t.Codigo == request.CodigoConfirmacao 
+                                    && !t.Confirmado 
+                                    && t.DtExpiracao.ToUniversalTime() > DateTime.UtcNow) ?? throw new Exception("Código de confirmação inválido ou expirado.");
 
-            if (!tokenValido)
-                throw new Exception("Código de confirmação inválido ou expirado.");
+            tokenValido.Confirmado = true;
 
             request.DtAgendamento = request.DtAgendamento.ToUniversalTime();
 
@@ -61,6 +63,9 @@ namespace Api.Aplicacao.Servicos
                              ah.Agendamento.IdBarbeiro == request.IdBarbeiro &&
                              request.IdsHorario.Contains(ah.IdBarbeiroHorario))
                 .ToList();
+
+            if (request.IdsHorario.Count == 0)
+                throw new Exception("Nenhum horario selecionado");
 
             if (horariosOcupados.Count != 0)
             {
@@ -74,18 +79,19 @@ namespace Api.Aplicacao.Servicos
         }
         public ResultadoPaginado<AgendamentosDetalheResponse> ListarAgendamentos(AgendamentoListarRequest request)
         {
-            request.DtInicio = request.DtInicio.HasValue ? request.DtInicio : DateTime.Now.Date.ToUniversalTime();
-            request.DtFim = request.DtFim.HasValue ? request.DtFim : DateTime.Now.Date.ToUniversalTime();
+            request.DtInicio = request.DtInicio.HasValue ? request.DtInicio : null;
+            request.DtFim = request.DtFim.HasValue ? request.DtFim : null;
+
 
 
             var query = _contexto.Agendamento
                                   .AsNoTracking()
                                   .Where(x => x.IdBarbeiro == request.IdBarbeiro &&
-                                              x.DtAgendamento.Date.ToUniversalTime() >= request.DtInicio.Value.Date.ToUniversalTime() &&
-                                              x.DtAgendamento.Date.ToUniversalTime() <= request.DtFim.Value.Date.ToUniversalTime() &&
+                                               (request.DtInicio == null || x.DtAgendamento.Date.ToUniversalTime() >= request.DtInicio.Value.Date.ToUniversalTime()) &&
+                                               (request.DtFim == null|| x.DtAgendamento.Date.ToUniversalTime() <= request.DtFim.Value.Date.ToUniversalTime()) &&
                                               (request.NomeCliente == null || x.NomeCliente.Contains(request.NomeCliente, StringComparison.CurrentCultureIgnoreCase)) &&
                                               (request.Status == null || x.Status == request.Status) &&
-                                              (request.IdServico == 0 || x.AgendamentoServicos.Any(j => j.IdServico == request.IdServico)))
+                                              (request.IdServico == null || x.AgendamentoServicos.Any(j => j.IdServico == request.IdServico)))
                                   .Include(x => x.AgendamentoHorarios)
                                   .ThenInclude(x => x.BarbeiroHorario)
                                   .Include(x => x.AgendamentoServicos)

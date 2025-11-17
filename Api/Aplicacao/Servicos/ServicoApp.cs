@@ -143,6 +143,7 @@ namespace Api.Aplicacao.Servicos
                 .Where(s => s.IdBarbeiro == idBarbeiro && s.DtFim == null)
                 .Include(x => x.Servico)
                 .ThenInclude(x => x!.CategoriaServico)
+                .OrderBy(x => x.Servico!.Descricao)
                 .Select(s => new ServicosDetalhesResponse
                 {
                     Id = s.Id,
@@ -160,6 +161,7 @@ namespace Api.Aplicacao.Servicos
             var query = _contexto.Servico
                 .Where(s => s.DtFim == null)
                 .Include(x => x.CategoriaServico)
+                .OrderBy(x => x.Descricao)
                 .Select(s => new ServicosDetalhesResponse
                 {
                     Id = s.Id,

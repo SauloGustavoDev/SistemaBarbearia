@@ -11,7 +11,7 @@ namespace Api.Controllers
     {
         private readonly IRelatorioApp _app = app;
         [HttpGet("RelatorioFinanceiro")]
-        public ActionResult<RelatorioFinanceiro> RelatorioFinanceiro([FromBody] RelatorioFinanceiroRequest request)
+        public ActionResult<RelatorioFinanceiro> RelatorioFinanceiro([FromQuery] RelatorioFinanceiroRequest request)
         {
             request.IdBarbeiro = request.IdBarbeiro != 0 ? request.IdBarbeiro : GetUserId();
             return _app.GerarRelatorioFinanceiro(request);

@@ -50,7 +50,7 @@ namespace Api.Controllers
         [HttpGet("Agendamentos")]
         public ActionResult<ResultadoPaginado<AgendamentosDetalheResponse>> ListarAgendamentos([FromQuery] AgendamentoListarRequest request)
         {
-            request.IdBarbeiro = request.IdBarbeiro == 0 ? GetUserId() : request.IdBarbeiro;
+            request.IdBarbeiro = request.IdBarbeiro == null ? GetUserId() : request.IdBarbeiro;
             var data =  _app.ListarAgendamentos(request);
             return data;
         }

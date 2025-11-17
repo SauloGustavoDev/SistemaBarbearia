@@ -16,7 +16,12 @@ namespace Api.Modelos.Response
             Id = agendamento.Id;
             Barbeiro = agendamento.Barbeiro!.Nome;
             Cliente = agendamento.NomeCliente;
-            Dt_Agendamento = new DateTime(DateOnly.FromDateTime(agendamento.DtAgendamento), agendamento.AgendamentoHorarios.FirstOrDefault()!.BarbeiroHorario!.Hora);
+            var data = DateOnly.FromDateTime(agendamento.DtAgendamento);
+            var hora = agendamento.AgendamentoHorarios
+                        .Select(x => x.BarbeiroHorario!.Hora)
+                        .OrderBy(h => h)
+                        .FirstOrDefault();
+            Dt_Agendamento = new DateTime(data, hora);
             Servicos = agendamento.AgendamentoServicos.Select(s => new ServicosDetalhesResponse
             {
                 Id = s.Servico!.Id,
