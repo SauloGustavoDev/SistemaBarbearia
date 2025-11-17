@@ -54,7 +54,6 @@ namespace Api.Controllers
             var data =  _app.ListarAgendamentos(request);
             return data;
         }
-
         [HttpPatch("CompletarAgendamento")]
         public ActionResult CompletarAgendamento([FromBody]AgendamentoCompletarRequest request)
         {
