@@ -149,7 +149,8 @@ namespace Api.Aplicacao.Servicos
                     Id = s.Id,
                     Descricao = s.Servico!.Descricao,
                     Valor = s.Servico.Valor,
-                    Categoria = s.Servico.CategoriaServico!.Descricao!
+                    Categoria = s.Servico.CategoriaServico!.Descricao!,
+                    TempoEstimado = s.Servico.TempoEstimado
                 })
                 .AsQueryable();
 

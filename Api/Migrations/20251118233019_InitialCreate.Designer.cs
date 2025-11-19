@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Api.Migrations
 {
     [DbContext(typeof(Contexto))]
-    [Migration("20251101181749_InitialCreate")]
+    [Migration("20251118233019_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -337,6 +337,84 @@ namespace Api.Migrations
                     b.ToTable("tokenconfirmacao", (string)null);
                 });
 
+            modelBuilder.Entity("Api.Modelos.Entidades.Mensalista", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("DtFim")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dtfim");
+
+                    b.Property<DateTime>("DtInicio")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dtinicio");
+
+                    b.Property<int>("IdBarbeiro")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("nome");
+
+                    b.Property<string>("Numero")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("numero");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tipo");
+
+                    b.Property<decimal>("Valor")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("valor");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdBarbeiro");
+
+                    b.ToTable("mensalista", (string)null);
+                });
+
+            modelBuilder.Entity("Api.Modelos.Entidades.MensalistaDia", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("DiaSemana")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("DiaSemana");
+
+                    b.Property<TimeOnly>("Horario")
+                        .HasColumnType("time")
+                        .HasColumnName("Horario");
+
+                    b.Property<int>("MensalistaId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MensalistaId")
+                        .IsUnique();
+
+                    b.ToTable("mensalistadia", (string)null);
+                });
+
             modelBuilder.Entity("Api.Modelos.Entidades.Servico", b =>
                 {
                     b.Property<int>("Id")
@@ -467,6 +545,24 @@ namespace Api.Migrations
                     b.Navigation("Servico");
                 });
 
+            modelBuilder.Entity("Api.Modelos.Entidades.Mensalista", b =>
+                {
+                    b.HasOne("Api.Modelos.Entidades.Barbeiro", null)
+                        .WithMany("Mensalistas")
+                        .HasForeignKey("IdBarbeiro")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Api.Modelos.Entidades.MensalistaDia", b =>
+                {
+                    b.HasOne("Api.Modelos.Entidades.Mensalista", null)
+                        .WithOne("Dia")
+                        .HasForeignKey("Api.Modelos.Entidades.MensalistaDia", "MensalistaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Api.Modelos.Entidades.Servico", b =>
                 {
                     b.HasOne("Api.Modelos.Entidades.CategoriaServico", "CategoriaServico")
@@ -492,6 +588,8 @@ namespace Api.Migrations
                     b.Navigation("BarbeiroHorarios");
 
                     b.Navigation("BarbeiroServicos");
+
+                    b.Navigation("Mensalistas");
                 });
 
             modelBuilder.Entity("Api.Modelos.Entidades.BarbeiroHorario", b =>
@@ -502,6 +600,12 @@ namespace Api.Migrations
             modelBuilder.Entity("Api.Modelos.Entidades.CategoriaServico", b =>
                 {
                     b.Navigation("Servicos");
+                });
+
+            modelBuilder.Entity("Api.Modelos.Entidades.Mensalista", b =>
+                {
+                    b.Navigation("Dia")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Api.Modelos.Entidades.Servico", b =>

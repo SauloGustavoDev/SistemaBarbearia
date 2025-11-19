@@ -96,7 +96,7 @@ namespace Api.Aplicacao.Servicos
                                   .ThenInclude(x => x.BarbeiroHorario)
                                   .Include(x => x.AgendamentoServicos)
                                   .ThenInclude(x => x.Servico)
-                                  .OrderByDescending(x => x.DtAgendamento)
+                                  .OrderBy(x => x.DtAgendamento)
                                   .Select(x => new AgendamentosDetalheResponse(x))
                                   .AsQueryable();
 

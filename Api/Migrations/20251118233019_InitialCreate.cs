@@ -115,6 +115,32 @@ namespace Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "mensalista",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    nome = table.Column<string>(type: "text", nullable: false),
+                    numero = table.Column<string>(type: "text", nullable: false),
+                    valor = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    tipo = table.Column<string>(type: "text", nullable: false),
+                    dtinicio = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    dtfim = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    IdBarbeiro = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_mensalista", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_mensalista_barbeiro_IdBarbeiro",
+                        column: x => x.IdBarbeiro,
+                        principalTable: "barbeiro",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "servico",
                 columns: table => new
                 {
@@ -181,6 +207,27 @@ namespace Api.Migrations
                         name: "FK_barbeirohorarioexcecao_barbeirohorario_idbarbeirohorario",
                         column: x => x.idbarbeirohorario,
                         principalTable: "barbeirohorario",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "mensalistadia",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    MensalistaId = table.Column<int>(type: "integer", nullable: false),
+                    DiaSemana = table.Column<string>(type: "text", nullable: false),
+                    Horario = table.Column<TimeOnly>(type: "time", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_mensalistadia", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_mensalistadia_mensalista_MensalistaId",
+                        column: x => x.MensalistaId,
+                        principalTable: "mensalista",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -279,6 +326,17 @@ namespace Api.Migrations
                 column: "idservico");
 
             migrationBuilder.CreateIndex(
+                name: "IX_mensalista_IdBarbeiro",
+                table: "mensalista",
+                column: "IdBarbeiro");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_mensalistadia_MensalistaId",
+                table: "mensalistadia",
+                column: "MensalistaId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_servico_idcategoriaservico",
                 table: "servico",
                 column: "idcategoriaservico");
@@ -300,6 +358,9 @@ namespace Api.Migrations
                 name: "barbeiroservico");
 
             migrationBuilder.DropTable(
+                name: "mensalistadia");
+
+            migrationBuilder.DropTable(
                 name: "tokenconfirmacao");
 
             migrationBuilder.DropTable(
@@ -312,10 +373,13 @@ namespace Api.Migrations
                 name: "servico");
 
             migrationBuilder.DropTable(
-                name: "barbeiro");
+                name: "mensalista");
 
             migrationBuilder.DropTable(
                 name: "categoriaservico");
+
+            migrationBuilder.DropTable(
+                name: "barbeiro");
         }
     }
 }

@@ -4,6 +4,7 @@
     {
         Dinheiro = 1,
         Crédito = 2,
-        Debito = 3
+        Debito = 3,
+        Pix = 4
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Api.Aplicacao.Contratos;
 using Api.Modelos.Request;
 using Api.Modelos.Response;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
@@ -32,21 +33,21 @@ namespace Api.Controllers
             _app.GerarToken(numero);
             return Ok();
         }
-
+        [Authorize]
         [HttpGet("AgendamentoAtual")]
         public ActionResult<AgendamentoAtualResponse> AgendamentoAtual()
         {
             var data = _app.AgendamentoAtual(GetUserId());
             return data;
         }
-
+        [Authorize]
         [HttpPut("Agendamento")]
         public ActionResult AtualizarAgendamento([FromBody] AgendamentoAtualizarRequest agendamento)
         {
             _app.AtualizarAgendamento(agendamento);
             return Ok();
         }
-
+        [Authorize]
         [HttpGet("Agendamentos")]
         public ActionResult<ResultadoPaginado<AgendamentosDetalheResponse>> ListarAgendamentos([FromQuery] AgendamentoListarRequest request)
         {
@@ -54,12 +55,14 @@ namespace Api.Controllers
             var data =  _app.ListarAgendamentos(request);
             return data;
         }
+        [Authorize]
         [HttpPatch("CompletarAgendamento")]
         public ActionResult CompletarAgendamento([FromBody]AgendamentoCompletarRequest request)
         {
             _app.CompletarAgendamento(request);
             return Ok();
         }
+        [Authorize]
         [HttpDelete("Agendamento")]
         public ActionResult CancelarAgendamento([FromHeader]int id)
         {

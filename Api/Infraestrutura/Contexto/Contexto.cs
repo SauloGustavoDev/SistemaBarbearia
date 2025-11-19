@@ -5,6 +5,8 @@ namespace Api.Infraestrutura.Contexto
     public class Contexto(DbContextOptions<Contexto> option) : DbContext(option)
     {
         public DbSet<Barbeiro> Barbeiro { get; set; }
+        public DbSet<Mensalista> Mensalista { get; set; }
+        public DbSet<MensalistaDia> MensalistaDia { get; set; }
         public DbSet<Servico> Servico { get; set; }
         public DbSet<Agendamento> Agendamento { get; set; }
         public DbSet<AgendamentoHorario> AgendamentoHorario { get; set; }
@@ -18,6 +20,35 @@ namespace Api.Infraestrutura.Contexto
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<MensalistaDia>(entity =>
+            {
+                entity.ToTable("mensalistadia");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.DiaSemana).HasColumnName("DiaSemana").HasConversion<string>();
+                entity.Property(e => e.Horario).HasColumnName("Horario").HasColumnType("time");
+            });
+
+            modelBuilder.Entity<Mensalista>(entity =>
+            {
+                entity.ToTable("mensalista");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Nome).HasColumnName("nome").IsRequired();
+                entity.Property(e => e.Valor).HasColumnName("valor").IsRequired().HasColumnType("decimal(18,2)");
+                entity.Property(e => e.Numero).HasColumnName("numero").IsRequired();
+                entity.Property(e => e.IdBarbeiro).HasColumnName("idbarbeiro");
+                entity.Property(e => e.Tipo).HasColumnName("tipo").HasConversion<string>(); // Converte o enum para string no banco
+                entity.Property(e => e.Status).HasColumnName("status").HasConversion<string>(); // Converte o enum para string no banco
+
+                entity.Property(e => e.DtInicio).HasColumnName("dtinicio");
+                entity.Property(e => e.DtFim).HasColumnName("dtfim");
+
+                entity.HasOne<Barbeiro>()
+                .WithMany(b => b.Mensalistas)
+                      .HasForeignKey(m => m.IdBarbeiro)
+                      .OnDelete(DeleteBehavior.Restrict); // Impede apagar barbeiro com mensalistas ativos
+            });
 
             modelBuilder.Entity<CodigoConfirmacao>(entity =>
             {
@@ -33,30 +64,14 @@ namespace Api.Infraestrutura.Contexto
 
             modelBuilder.Entity<CategoriaServico>(entity =>
             {
-                // Define o nome da tabela como 'categoriaservico' (tudo em minúsculo)
                 entity.ToTable("categoriaservico");
-
-                // Define a chave primária
                 entity.HasKey(e => e.Id);
-
-                // Mapeia a propriedade 'Id' para a coluna 'id'
                 entity.Property(e => e.Id).HasColumnName("id");
-
-                // Mapeia a propriedade 'Descricao' para a coluna 'descricao'
-                // e a define como obrigatória (NOT NULL no banco)
-                // Renomeei para 'Nome' para consistência, mas mantive 'Descricao' como você pediu.
                 entity.Property(e => e.Descricao)
                       .HasColumnName("descricao")
                       .IsRequired();
-
-
                 entity.Property(e => e.DtInicio).HasColumnName("dtinicio");
                 entity.Property(e => e.DtFim).HasColumnName("dtfim");
-
-                // Configura o relacionamento "Um-para-Muitos"
-                // Uma CategoriaServico TEM MUITOS Servicos...
-                // ...e cada Servico TEM UMA CategoriaServico.
-                // A chave estrangeira ('IdCategoriaServico') está definida na entidade 'Servico'.
                 entity.HasMany(c => c.Servicos)
                       .WithOne(s => s.CategoriaServico)
                       .HasForeignKey(s => s.IdCategoriaServico)
@@ -75,30 +90,24 @@ namespace Api.Infraestrutura.Contexto
                 entity.Property(e => e.Email).HasColumnName("email");
                 entity.Property(e => e.Numero).HasColumnName("numero");
                 entity.Property(e => e.Foto).HasColumnName("foto");
-                entity.Property(e => e.Acesso).HasColumnName("acesso")
-                .HasConversion<string>();
-                entity.Property(e => e.Agenda).HasColumnName("tipoagenda")
-                .HasConversion<string>();
+                entity.Property(e => e.Acesso).HasColumnName("acesso").HasConversion<string>();
+                entity.Property(e => e.Agenda).HasColumnName("tipoagenda").HasConversion<string>();
                 entity.Property(e => e.Descricao).HasColumnName("descricao");
                 entity.Property(e => e.DtCadastro).HasColumnName("dtcadastro");
                 entity.Property(e => e.DtDemissao).HasColumnName("dtdemissao");
             });
 
-            // Api.Infraestrutura.Contexto/Contexto.cs
             modelBuilder.Entity<Servico>(entity =>
             {
                 entity.ToTable("servico");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).HasColumnName("id");
 
-                // Mapeia as novas propriedades
                 entity.Property(e => e.Descricao).HasColumnName("nome").IsRequired(); // Agora é 'Nome'
                 entity.Property(e => e.Valor).HasColumnName("valor").HasColumnType("decimal(18,2)"); // Boa prática especificar precisão
                 entity.Property(e => e.TempoEstimado).HasColumnName("tempoestimado").HasColumnType("time");
                 entity.Property(e => e.DtInicio).HasColumnName("dtinicio");
                 entity.Property(e => e.DtFim).HasColumnName("dtfim");
-
-                // Mapeia o relacionamento com CategoriaServico
                 entity.Property(e => e.IdCategoriaServico).HasColumnName("idcategoriaservico");
                 entity.HasOne(s => s.CategoriaServico)
                       .WithMany(c => c.Servicos)
@@ -111,24 +120,13 @@ namespace Api.Infraestrutura.Contexto
                 entity.ToTable("barbeiroservico");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).HasColumnName("id");
-                // ... mapeie as outras colunas ...
                 entity.Property(e => e.DtInicio).HasColumnName("dtinicio");
                 entity.Property(e => e.DtFim).HasColumnName("dtfim");
 
-                // --- A MÁGICA ACONTECE AQUI ---
-
-                // 1. Mapeie a coluna da chave estrangeira
                 entity.Property(e => e.IdBarbeiro).HasColumnName("idbarbeiro");
-
-                // 2. Defina o relacionamento:
-                //    - Um BarbeiroServico TEM UM Barbeiro...
-                //    - ...e um Barbeiro TEM MUITOS BarbeiroServicos...
-                //    - ...e a chave estrangeira em BarbeiroServico é a propriedade IdBarbeiro.
                 entity.HasOne(bs => bs.Barbeiro)
                       .WithMany(b => b.BarbeiroServicos) // 'BarbeiroServicos' é a List<> na entidade Barbeiro
                       .HasForeignKey(bs => bs.IdBarbeiro);
-
-                // Faça o mesmo para o Serviço
                 entity.Property(e => e.IdServico).HasColumnName("idservico");
                 entity.HasOne(bs => bs.Servico)
                       .WithMany() // Se Servico não tiver uma lista de BarbeiroServicos, use .WithMany() vazio
@@ -146,12 +144,9 @@ namespace Api.Infraestrutura.Contexto
                     entity.Property(e => e.IdBarbeiro).HasColumnName("idbarbeiro");
 
                     entity.Property(e => e.Hora).HasColumnName("hora").HasColumnType("time");
-                    entity.Property(e => e.TipoDia).HasColumnName("tipodia")
-                    .HasConversion<string>();
+                    entity.Property(e => e.TipoDia).HasColumnName("tipodia").HasConversion<string>();
                     entity.Property(e => e.DtInicio).HasColumnName("dtinicio");
                     entity.Property(e => e.DtFim).HasColumnName("dtfim");
-
-                    // 🟢 Ajustar o relacionamento para usar a FK explícita
                     entity.HasOne<Barbeiro>()
                         .WithMany(b => b.BarbeiroHorarios)
                         .HasForeignKey(bh => bh.IdBarbeiro); // Usar a propriedade IdBarbeiro
@@ -178,8 +173,6 @@ namespace Api.Infraestrutura.Contexto
                 entity.ToTable("agendamento");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).HasColumnName("id");
-
-                // Mapeamento explícito da propriedade para a coluna
                 entity.Property(e => e.IdBarbeiro).HasColumnName("idbarbeiro");
 
                 entity.Property(e => e.MetodoPagamento)
@@ -202,8 +195,6 @@ namespace Api.Infraestrutura.Contexto
             {
                 entity.ToTable("agendamentohorario");
                 entity.HasKey(e => e.Id);
-
-                // Adicione esta linha para mapear a chave primária
                 entity.Property(e => e.Id).HasColumnName("id");
                 entity.Property(e => e.IdAgendamento).HasColumnName("idagendamento");
                 entity.Property(e => e.IdBarbeiroHorario).HasColumnName("idbarbeirohorario");
@@ -223,18 +214,13 @@ namespace Api.Infraestrutura.Contexto
             modelBuilder.Entity<AgendamentoServico>(entity =>
             {
                 entity.ToTable("agendamentoservico");
-                // Chave primária composta
                 entity.HasKey(e => new { e.IdAgendamento, e.IdServico });
 
                 entity.Property(e => e.IdAgendamento).HasColumnName("idagendamento");
                 entity.Property(e => e.IdServico).HasColumnName("idservico");
-
-                // Relacionamento com Agendamento
                 entity.HasOne(e => e.Agendamento)
                       .WithMany(a => a.AgendamentoServicos)
                       .HasForeignKey(e => e.IdAgendamento);
-
-                // Relacionamento com Servico
                 entity.HasOne(e => e.Servico) // ✅ CORRETO: Aponta para a entidade Servico
                 .WithMany(s => s.AgendamentoServicos) // Navegação inversa em Servico
                 .HasForeignKey(e => e.IdServico);

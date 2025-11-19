@@ -21,6 +21,7 @@ namespace Api.Modelos.Entidades
         public List<BarbeiroServico>? BarbeiroServicos { get; set; } = [];
         public List<BarbeiroHorario>? BarbeiroHorarios { get; set; } = [];
         public List<Agendamento>? Agendamentos { get; set; } = [];
+        public List<Mensalista>? Mensalistas { get; set; } = [];
         public Barbeiro()
         {
 
