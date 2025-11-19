@@ -14,6 +14,12 @@ namespace Api.Infraestrutura.Hangfire
                 "*/10 * * * *"
             );
 
+            RecurringJob.AddOrUpdate<IWorker>(
+                "Agendamentos-Mensalistas",
+                worker => worker.GerarAgendamentosMensalistas(),
+                "0 0 1 * *"
+            );
+
             return app;
         }
     }

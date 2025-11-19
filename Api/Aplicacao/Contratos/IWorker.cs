@@ -3,5 +3,6 @@
     public interface IWorker
     {
         void EnviarNotificacaoCorte();
+        void GerarAgendamentosMensalistas();
     }
 }

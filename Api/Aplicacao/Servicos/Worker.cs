@@ -1,5 +1,7 @@
 ﻿using Api.Aplicacao.Contratos;
 using Api.Infraestrutura.Contexto;
+using Api.Migrations;
+using Api.Modelos.Entidades;
 using Api.Modelos.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,9 +20,6 @@ namespace Api.Aplicacao.Servicos
             {
                 var agora = DateTime.UtcNow;
                 var umaHoraDepois = agora.AddHours(1);
-
-                // Busca agendamentos confirmados que estão para acontecer na próxima hora
-                // e que ainda não tiveram lembrete enviado (assumindo uma flag \'LembreteEnviado\' no Agendamento)
                 var agendamento =  _contexto.Agendamento
                     .Where(a => a.Status == Status.Pendente &&
                                 a.DtAgendamento.ToUniversalTime() == umaHoraDepois)
@@ -50,6 +49,73 @@ namespace Api.Aplicacao.Servicos
             {
                 _logger.LogError(ex, "Worker: Erro ao enviar lembretes de agendamento.");
             }
+        }
+        public void GerarAgendamentosMensalistas()
+        {
+            var ultimoDia = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month));
+            var mensalistas = _contexto.Mensalista
+                .Where(m => m.DtFim == null && m.Tipo == TipoMensalista.Mensal && m.Status == StatusMensalista.RenovacaoAutomatica)
+                .ToList();
+
+            foreach (var mensal in mensalistas)
+            {
+                for (DateTime dia = DateTime.UtcNow.AddDays(1); dia <= ultimoDia; dia = dia.AddDays(1))
+                {
+                    if (dia.DayOfWeek == mensal.Dia.DiaSemana)
+                    {
+                        var diaUtc = dia.ToUniversalTime();
+
+                        var existeAgendamento = _contexto.Agendamento
+                            .Where(a => a.DtAgendamento == diaUtc)
+                            .Include(x => x.AgendamentoHorarios)
+                                .ThenInclude(x => x.BarbeiroHorario)
+                            .Where(x => x.AgendamentoHorarios
+                                .Any(ah =>
+                                    ah.BarbeiroHorario != null &&
+                                    ah.BarbeiroHorario.Hora == mensal.Dia.Horario &&
+                                    ah.BarbeiroHorario.IdBarbeiro == mensal.IdBarbeiro))
+                            .FirstOrDefault();
+
+                        if (existeAgendamento == null)
+                        {
+                            var agendamento = new Agendamento()
+                            {
+                                IdBarbeiro = mensal.IdBarbeiro,
+                                NomeCliente = mensal.Nome,
+                                NumeroCliente = mensal.Numero,
+                                DtAgendamento = dia,
+                                Status = Status.Pendente,
+                                MetodoPagamento = MetodoPagamento.Pix,
+                                AgendamentoHorarios = new List<AgendamentoHorario>
+                                                {
+                                                    new AgendamentoHorario
+                                                    {
+                                                        IdBarbeiroHorario = _contexto.BarbeiroHorario
+                                                            .Where(bh => bh.IdBarbeiro == mensal.IdBarbeiro && bh.Hora == mensal.Dia.Horario)
+                                                            .Select(bh => bh.Id)
+                                                            .FirstOrDefault()
+                                                    }
+                                                },
+                                AgendamentoServicos = new List<AgendamentoServico>
+                                                {
+                                                    new AgendamentoServico
+                                                    {
+                                                        IdServico = _contexto.Servico
+                                                        .Include(s => s.CategoriaServico)
+                                                            .Where(s => s.CategoriaServico != null && s.CategoriaServico.Descricao == "Mensalista")
+                                                            .Select(s => s.Id)
+                                                            .FirstOrDefault()
+                                                    }
+                                                }
+                            };
+                            _contexto.Agendamento.Add(agendamento);
+                        }
+
+                    }
+                }
+            }
+           
+            _contexto.SaveChanges();
         }
     }
 }
