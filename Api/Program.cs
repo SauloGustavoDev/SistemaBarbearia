@@ -60,6 +60,7 @@ builder.Services.AddSwaggerGen(o =>
     };
     o.AddSecurityRequirement(securityRequirement);
 });
+builder.Services.AddScoped<IExcecaoApp, ExcecaoApp>();
 builder.Services.AddScoped<IMensalistaApp, MensalistaApp>();
 builder.Services.AddScoped<IBarbeiroApp, BarbeiroApp>();
 builder.Services.AddScoped<IRelatorioApp, RelatorioApp>();
